@@ -2,6 +2,7 @@
 
 import { Star, Quote } from "lucide-react"
 import Image from "next/image"
+import { motion } from "framer-motion"
 
 const testimonials = [
   {
@@ -63,7 +64,38 @@ export function TestimonialsSection() {
       <div className="max-w-7xl mx-auto">
         <div className="text-center mb-16">
           <h2 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
-            Apa Kata <span className="text-blue-600">Mereka</span>
+            Apa Kata <span className="text-blue-600 relative inline-block">
+              Mereka
+              <motion.svg
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.3 }}
+                className="absolute -bottom-2 left-0 w-full"
+                viewBox="0 0 300 12"
+                preserveAspectRatio="none"
+                style={{ height: '12px' }}
+              >
+                <motion.path
+                  d="M0,6 Q12,10 24,6 T48,6 T72,6 T96,6 T120,6 T144,6 T168,6 T192,6 T216,6 T240,6 T264,6 T288,6 T300,6"
+                  stroke="url(#gradient-testimonial)"
+                  strokeWidth="3"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeDasharray="1000"
+                  initial={{ strokeDashoffset: 1000 }}
+                  whileInView={{ strokeDashoffset: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 1.5, delay: 0.3, ease: "easeInOut" }}
+                />
+                <defs>
+                  <linearGradient id="gradient-testimonial" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#fb923c" />
+                    <stop offset="100%" stopColor="#ea580c" />
+                  </linearGradient>
+                </defs>
+              </motion.svg>
+            </span>
           </h2>
           <p className="text-slate-600 text-lg max-w-2xl mx-auto">
             Ribuan masjid dan donatur telah mempercayai DanaMasjid untuk mengelola donasi mereka

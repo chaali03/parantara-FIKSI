@@ -17,8 +17,18 @@ export function FeaturesSection() {
   return (
     <section id="features" className="py-32 px-6 relative overflow-hidden max-w-full">
       <div className="absolute top-[49%] lg:top-[85%] xl:top-[80%] -translate-y-1/2 left-0 right-0 lg:left-[46%] flex justify-center pointer-events-none z-20 max-w-full overflow-hidden">
-        <span className="font-bold text-center text-[20vw] sm:text-[14vw] md:text-[12vw] lg:text-[12vw] leading-none tracking-tighter text-zinc-200 whitespace-nowrap">
-          KELOLA
+        <span className="relative inline-block">
+          <span className="relative z-10 font-bold text-center text-[20vw] sm:text-[14vw] md:text-[12vw] lg:text-[12vw] leading-none tracking-tighter text-white whitespace-nowrap px-4">
+            KELOLA
+          </span>
+          <motion.span
+            className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 -z-0"
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+            style={{ transformOrigin: "left" }}
+          />
         </span>
       </div>
 

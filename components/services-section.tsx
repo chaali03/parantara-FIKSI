@@ -2,6 +2,7 @@
 
 import { FileText, CheckCircle, Shield } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
+import { motion } from "framer-motion"
 
 const services = [
   {
@@ -80,8 +81,18 @@ export function ServicesSection() {
   return (
     <section id="how-it-works" className="py-32 px-6 pb-24 relative overflow-hidden max-w-full">
       <div className="absolute top-0 left-0 right-0 flex justify-center pointer-events-none z-0 max-w-full overflow-hidden">
-        <span className="font-bold text-center text-[18vw] sm:text-[16vw] md:text-[14vw] lg:text-[12vw] leading-none tracking-tighter text-zinc-200 whitespace-nowrap">
-          AMANAH
+        <span className="relative inline-block">
+          <span className="relative z-10 font-bold text-center text-[18vw] sm:text-[16vw] md:text-[14vw] lg:text-[12vw] leading-none tracking-tighter text-white whitespace-nowrap px-4">
+            AMANAH
+          </span>
+          <motion.span
+            className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-yellow-500 -z-0"
+            initial={{ scaleX: 0 }}
+            whileInView={{ scaleX: 1 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+            style={{ transformOrigin: "left" }}
+          />
         </span>
       </div>
 

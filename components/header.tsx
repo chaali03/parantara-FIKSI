@@ -4,41 +4,66 @@ import type React from "react"
 import { useState } from "react"
 import { Menu, X, ArrowUpRight, ArrowRight, ChevronDown } from "lucide-react"
 import Image from "next/image"
+import { useRouter } from "next/navigation"
+import { motion } from "framer-motion"
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const [isMobileDropdownOpen, setIsMobileDropdownOpen] = useState(false)
   const isScrolled = true
+  const router = useRouter()
 
   const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault()
-    const element = document.getElementById(targetId)
+    
+    // Check if we're on homepage
+    if (window.location.pathname === '/') {
+      const element = document.getElementById(targetId)
+      if (element) {
+        const headerOffset = 100
+        const elementPosition = element.getBoundingClientRect().top + window.scrollY
+        const offsetPosition = elementPosition - headerOffset
 
-    if (element) {
-      const headerOffset = 100
-      const elementPosition = element.getBoundingClientRect().top + window.scrollY
-      const offsetPosition = elementPosition - headerOffset
-
-      window.scrollTo({
-        top: offsetPosition,
-        behavior: "smooth",
-      })
+        window.scrollTo({
+          top: offsetPosition,
+          behavior: "smooth",
+        })
+        setIsOpen(false)
+      }
+    } else {
+      // If not on homepage, navigate to homepage with hash
+      router.push(`/#${targetId}`)
       setIsOpen(false)
     }
   }
 
   const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
     e.preventDefault()
-    window.scrollTo({
-      top: 0,
-      behavior: "smooth",
-    })
+    
+    // Check if we're on homepage
+    if (window.location.pathname === '/') {
+      window.scrollTo({
+        top: 0,
+        behavior: "smooth",
+      })
+    } else {
+      // Navigate to homepage
+      router.push('/')
+    }
   }
 
   return (
-    <header className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "px-4 pt-4" : ""}`}>
-      <div
+    <motion.header 
+      initial={{ y: -100, opacity: 0 }}
+      animate={{ y: 0, opacity: 1 }}
+      transition={{ duration: 0.6, ease: "easeOut" }}
+      className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${isScrolled ? "px-4 pt-4" : ""}`}
+    >
+      <motion.div
+        initial={{ scale: 0.95 }}
+        animate={{ scale: 1 }}
+        transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
         className={`max-w-7xl mx-auto transition-all duration-300 rounded-2xl ${
           isScrolled
             ? "bg-white/70 backdrop-blur-xl border border-zinc-200 px-6 py-3"
@@ -104,6 +129,29 @@ export function Header() {
             >
               FAQ
             </a>
+            
+            {/* Separator */}
+            <div className={`h-6 w-px ${isScrolled ? "bg-zinc-300" : "bg-border"}`} />
+            
+            {/* Harga Link */}
+            <a
+              href="/pricing"
+              className={`text-sm transition-colors cursor-pointer ${
+                isScrolled ? "text-zinc-600 hover:text-black" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Harga
+            </a>
+            
+            {/* Tim Link */}
+            <a
+              href="/team"
+              className={`text-sm transition-colors cursor-pointer ${
+                isScrolled ? "text-zinc-600 hover:text-black" : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              Tim
+            </a>
           </nav>
 
           <div className="hidden lg:flex items-center gap-3">
@@ -137,6 +185,7 @@ export function Header() {
                     }`}
                     onClick={() => {
                       setIsDropdownOpen(false)
+                      router.push("/login")
                     }}
                   >
                     Masuk
@@ -149,6 +198,7 @@ export function Header() {
                     }`}
                     onClick={() => {
                       setIsDropdownOpen(false)
+                      router.push("/register")
                     }}
                   >
                     Daftar
@@ -161,6 +211,7 @@ export function Header() {
                     }`}
                     onClick={() => {
                       setIsDropdownOpen(false)
+                      router.push("/jamaah")
                     }}
                   >
                     Jamaah
@@ -260,6 +311,30 @@ export function Header() {
             >
               FAQ
             </a>
+            
+            {/* Separator */}
+            <div className={`h-px w-full ${isScrolled ? "bg-zinc-200" : "bg-border"}`} />
+            
+            {/* Harga Link */}
+            <a
+              href="/pricing"
+              className={`transition-colors cursor-pointer font-medium ${
+                isScrolled ? "text-zinc-700 hover:text-black" : "text-foreground hover:text-foreground"
+              }`}
+            >
+              Harga
+            </a>
+            
+            {/* Tim Link */}
+            <a
+              href="/team"
+              className={`transition-colors cursor-pointer font-medium ${
+                isScrolled ? "text-zinc-700 hover:text-black" : "text-foreground hover:text-foreground"
+              }`}
+            >
+              Tim
+            </a>
+            
             <div
               className={`flex flex-col gap-3 mt-4 pt-4 border-t ${isScrolled ? "border-zinc-200" : "border-border"}`}
             >
@@ -293,6 +368,8 @@ export function Header() {
                       }`}
                       onClick={() => {
                         setIsMobileDropdownOpen(false)
+                        setIsOpen(false)
+                        router.push("/login")
                       }}
                     >
                       Masuk
@@ -305,6 +382,8 @@ export function Header() {
                       }`}
                       onClick={() => {
                         setIsMobileDropdownOpen(false)
+                        setIsOpen(false)
+                        router.push("/register")
                       }}
                     >
                       Daftar
@@ -317,6 +396,8 @@ export function Header() {
                       }`}
                       onClick={() => {
                         setIsMobileDropdownOpen(false)
+                        setIsOpen(false)
+                        router.push("/jamaah")
                       }}
                     >
                       Jamaah
@@ -358,7 +439,7 @@ export function Header() {
             </div>
           </nav>
         )}
-      </div>
-    </header>
+      </motion.div>
+    </motion.header>
   )
 }

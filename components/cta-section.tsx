@@ -1,21 +1,73 @@
+"use client"
+
 import { ArrowUpRight, ArrowRight } from "lucide-react"
 import { AnimatedRevenueChart } from "./animated-revenue-chart"
+import { motion } from "framer-motion"
 
 export function CTASection() {
   return (
     <section className="py-16 md:py-32 pt-32 md:pt-48 lg:pt-32 px-6 relative overflow-hidden max-w-full">
-      <div className="absolute top-12 lg:inset-0 left-0 right-0 flex items-center justify-center pointer-events-none select-none z-0 max-w-full overflow-hidden">
-        <span className="text-[20vw] font-bold font-sans tracking-tighter leading-none text-zinc-200 whitespace-nowrap lg:hidden">
-          BERKAH
-        </span>
-        <div className="hidden lg:block w-full h-full relative max-w-full">
-          <div className="absolute left-[5%] top-1/2 -translate-y-1/2 flex flex-col items-start leading-none">
-            <span className="text-[20vw] font-bold font-sans tracking-tighter text-zinc-200">BE</span>
-            <span className="text-[20vw] font-bold font-sans tracking-tighter text-zinc-200 -mt-[4vw] pl-[13vw]">R</span>
+      <div className="absolute top-4 lg:inset-0 left-0 right-0 flex items-center justify-center pointer-events-none select-none z-0 max-w-full overflow-hidden">
+        {/* Mobile Version */}
+        <div className="lg:hidden text-[20vw] font-bold font-sans tracking-tighter leading-none whitespace-nowrap" suppressHydrationWarning>
+          <span className="relative inline-block">
+            <span className="relative z-10 text-white px-2">BER</span>
+            <motion.span
+              className="absolute inset-0 bg-gradient-to-r from-blue-400 to-blue-500 -z-0"
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2, ease: "easeOut" }}
+              style={{ transformOrigin: "left" }}
+            />
+          </span>
+          <span className="relative inline-block">
+            <span className="relative z-10 text-white px-2">KAH</span>
+            <motion.span
+              className="absolute inset-0 bg-gradient-to-r from-yellow-400 to-yellow-500 -z-0"
+              initial={{ scaleX: 0 }}
+              whileInView={{ scaleX: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.5, ease: "easeOut" }}
+              style={{ transformOrigin: "left" }}
+            />
+          </span>
+        </div>
+
+        {/* Desktop Version - Improved Design */}
+        <div className="hidden lg:flex w-full h-full items-center justify-between px-[8%] max-w-full" suppressHydrationWarning>
+          {/* Left Side - BER with blue background */}
+          <div className="relative">
+            <span className="relative inline-block">
+              <span className="relative z-10 text-white text-[18vw] font-bold font-sans tracking-tighter leading-none px-8">
+                BER
+              </span>
+              <motion.span
+                className="absolute inset-0 bg-gradient-to-br from-blue-400 via-blue-500 to-blue-600 -z-0 rounded-2xl shadow-2xl"
+                initial={{ scaleX: 0 }}
+                whileInView={{ scaleX: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+                style={{ transformOrigin: "left" }}
+              />
+            </span>
           </div>
-          <div className="absolute right-[4%] top-1/2 -translate-y-1/2 flex flex-col items-start leading-none">
-            <span className="text-[20vw] font-bold font-sans tracking-tighter text-zinc-200">K</span>
-            <span className="text-[20vw] font-bold font-sans tracking-tighter text-zinc-200 -mt-[4vw]">AH</span>
+
+          {/* Right Side - KAH with yellow background */}
+          <div className="relative">
+            <span className="relative inline-block">
+              <span className="relative z-10 text-white text-[18vw] font-bold font-sans tracking-tighter leading-none px-8">
+                KAH
+              </span>
+              <motion.span
+                className="absolute inset-0 bg-gradient-to-br from-yellow-400 via-yellow-500 to-yellow-600 -z-0 rounded-2xl shadow-2xl"
+                initial={{ scaleX: 0 }}
+                whileInView={{ scaleX: 1 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.8, delay: 0.5, ease: "easeOut" }}
+                style={{ transformOrigin: "left" }}
+              />
+            </span>
           </div>
         </div>
       </div>

@@ -19,7 +19,7 @@ const faqs = [
   {
     question: "Apakah pembayaran aman?",
     answer:
-      "Ya, semua pembayaran melalui platform kami yang aman. Dana ditahan hingga konfirmasi dari pengurus masjid, kemudian disalurkan. Jika ada sengketa, tim kami akan membantu menyelesaikan.",
+      "Ya, semua pembayaran melalui platform kami yang aman. Dana ditahan hingga konfirmasi dari pengurus masjid, kemudian disalurkan. Jika ada sengketa, tim HidupTebe akan membantu menyelesaikan.",
   },
   {
     question: "Apa yang dilindungi oleh sistem transparansi?",

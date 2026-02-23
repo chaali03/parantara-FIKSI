@@ -1,6 +1,7 @@
 "use client"
 import { useEffect, useState, useRef } from "react"
 import { AnimatedText } from "./animated-text"
+import { motion } from "framer-motion"
 
 export function HeroSection() {
   const [isVisible, setIsVisible] = useState(false)
@@ -117,12 +118,24 @@ export function HeroSection() {
           height: "100%",
         }}
       >
-        <span
+        <motion.span
+          initial={{ opacity: 0, scale: 0.5, y: 100 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{
+            duration: 1.2,
+            delay: 0.2,
+            ease: [0.16, 1, 0.3, 1],
+            scale: {
+              type: "spring",
+              damping: 15,
+              stiffness: 100,
+            }
+          }}
           className="block font-bold text-[28vw] sm:text-[25vw] md:text-[22vw] lg:text-[20vw] tracking-tighter select-none text-center leading-none bg-gradient-to-r from-blue-400 via-cyan-400 to-yellow-400 bg-clip-text text-transparent max-w-full"
           style={{ marginBottom: "0" }}
         >
           MASJID
-        </span>
+        </motion.span>
       </div>
 
       <div className="max-w-7xl mx-auto w-full relative z-10">
