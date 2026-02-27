@@ -40,6 +40,7 @@ export default function RegisterPage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [resendCountdown, setResendCountdown] = useState(0)
+  const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null)
 
   // Countdown timer for resend OTP
   useEffect(() => {
@@ -50,6 +51,31 @@ export default function RegisterPage() {
       return () => clearTimeout(timer)
     }
   }, [resendCountdown])
+
+  // Calculate password strength
+  const calculatePasswordStrength = (password: string): 'weak' | 'medium' | 'strong' => {
+    let strength = 0
+    
+    if (password.length >= 6) strength++
+    if (password.length >= 10) strength++
+    if (/[a-z]/.test(password)) strength++
+    if (/[A-Z]/.test(password)) strength++
+    if (/[0-9]/.test(password)) strength++
+    if (/[^a-zA-Z0-9]/.test(password)) strength++
+    
+    if (strength <= 2) return 'weak'
+    if (strength <= 4) return 'medium'
+    return 'strong'
+  }
+
+  // Update password strength when password changes
+  useEffect(() => {
+    if (formData.password) {
+      setPasswordStrength(calculatePasswordStrength(formData.password))
+    } else {
+      setPasswordStrength(null)
+    }
+  }, [formData.password])
 
   // Animation variants untuk efek muncul
   const containerVariants = {
@@ -259,25 +285,26 @@ export default function RegisterPage() {
         }
       } else if (currentStep === 3) {
         // Step 3: Validate password
+        if (!formData.password) {
+          setError('Masukkan password')
+          setLoading(false)
+          return
+        }
+        
+        const strength = calculatePasswordStrength(formData.password)
+        if (strength === 'weak') {
+          setError('Password terlalu lemah. Gunakan minimal password sedang.')
+          setLoading(false)
+          return
+        }
+        
         if (formData.password !== formData.confirmPassword) {
           setError('Password tidak cocok')
           setLoading(false)
           return
         }
-        if (formData.password.length < 6) {
-          setError('Password minimal 6 karakter')
-          setLoading(false)
-          return
-        }
-        if (!/(?=.*[A-Z])(?=.*[0-9])/.test(formData.password)) {
-          setError('Password harus mengandung huruf kapital dan angka')
-          setLoading(false)
-          return
-        }
-        setSuccess('Password valid!')
-        handleNext()
-      } else if (currentStep === 3) {
-        // Step 3: Complete registration with Firebase (without mosque info)
+        
+        // Complete registration with Firebase
         await signUpWithEmail(formData.email, formData.password, {
           name: formData.name,
           phone: formData.phone
@@ -745,6 +772,45 @@ export default function RegisterPage() {
                         </motion.button>
                       </motion.div>
 
+                      {/* Password Strength Indicator */}
+                      {passwordStrength && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="space-y-2"
+                        >
+                          <div className="flex gap-2">
+                            <div className={`h-2 flex-1 rounded-full transition-all ${
+                              passwordStrength === 'weak' ? 'bg-red-500' :
+                              passwordStrength === 'medium' ? 'bg-yellow-500' :
+                              'bg-green-500'
+                            }`} />
+                            <div className={`h-2 flex-1 rounded-full transition-all ${
+                              passwordStrength === 'medium' ? 'bg-yellow-500' :
+                              passwordStrength === 'strong' ? 'bg-green-500' :
+                              'bg-gray-200'
+                            }`} />
+                            <div className={`h-2 flex-1 rounded-full transition-all ${
+                              passwordStrength === 'strong' ? 'bg-green-500' : 'bg-gray-200'
+                            }`} />
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <p className={`text-sm font-medium ${
+                              passwordStrength === 'weak' ? 'text-red-600' :
+                              passwordStrength === 'medium' ? 'text-yellow-600' :
+                              'text-green-600'
+                            }`}>
+                              {passwordStrength === 'weak' && '❌ Password Lemah'}
+                              {passwordStrength === 'medium' && '⚠️ Password Sedang'}
+                              {passwordStrength === 'strong' && '✅ Password Kuat'}
+                            </p>
+                            {passwordStrength === 'weak' && (
+                              <p className="text-xs text-red-500">Minimal sedang untuk lanjut</p>
+                            )}
+                          </div>
+                        </motion.div>
+                      )}
+
                       <motion.div 
                         variants={itemVariants} 
                         custom={5}
@@ -786,9 +852,15 @@ export default function RegisterPage() {
                         custom={6}
                         className="bg-blue-50 border border-blue-200 rounded-xl p-4"
                       >
-                        <p className="text-sm text-blue-800">
-                          <strong>Tips Keamanan:</strong> Gunakan minimal 6 karakter dengan kombinasi huruf besar, huruf kecil, dan angka.
+                        <p className="text-sm text-blue-800 mb-2">
+                          <strong>Tips Password Kuat:</strong>
                         </p>
+                        <ul className="text-xs text-blue-700 space-y-1 list-disc list-inside">
+                          <li>Minimal 10 karakter untuk password kuat</li>
+                          <li>Kombinasi huruf besar dan kecil</li>
+                          <li>Tambahkan angka dan simbol (!@#$%)</li>
+                          <li>Hindari kata yang mudah ditebak</li>
+                        </ul>
                       </motion.div>
                     </>
                   )}
@@ -819,7 +891,7 @@ export default function RegisterPage() {
                   whileHover="hover"
                   whileTap="tap"
                   className="flex-1 py-4 bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 rounded-xl font-semibold hover:from-yellow-500 hover:to-yellow-600 transition-all shadow-md text-base disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={loading}
+                  disabled={loading || (currentStep === 3 && passwordStrength === 'weak')}
                 >
                   {loading ? (
                     <motion.div 
