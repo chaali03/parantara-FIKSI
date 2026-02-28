@@ -63,14 +63,14 @@ export function ZoomParallax({ images }: ZoomParallaxProps) {
 	const mockupY = useTransform(mockupProgress, [0, 1], [100, -100]);
 	const mockupScale = useTransform(mockupProgress, [0, 0.5, 1], [0.8, 1, 0.8]);
 
-	// Combined scales (initial * zoom)
-	const combinedScale1 = useTransform([initialScale1, scale4], ([init, zoom]: [number, number]) => init * zoom);
-	const combinedScale2 = useTransform([initialScale2, scale5], ([init, zoom]: [number, number]) => init * zoom);
-	const combinedScale3 = useTransform([initialScale3, scale6], ([init, zoom]: [number, number]) => init * zoom);
-	const combinedScale4 = useTransform([initialScale4, scale5], ([init, zoom]: [number, number]) => init * zoom);
-	const combinedScale5 = useTransform([initialScale5, scale6], ([init, zoom]: [number, number]) => init * zoom);
-	const combinedScale6 = useTransform([initialScale6, scale8], ([init, zoom]: [number, number]) => init * zoom);
-	const combinedScale7 = useTransform([initialScale7, scale9], ([init, zoom]: [number, number]) => init * zoom);
+	// Combined scales (initial * zoom) - using proper syntax for multiple MotionValues
+	const combinedScale1 = useTransform(() => initialScale1.get() * scale4.get());
+	const combinedScale2 = useTransform(() => initialScale2.get() * scale5.get());
+	const combinedScale3 = useTransform(() => initialScale3.get() * scale6.get());
+	const combinedScale4 = useTransform(() => initialScale4.get() * scale5.get());
+	const combinedScale5 = useTransform(() => initialScale5.get() * scale6.get());
+	const combinedScale6 = useTransform(() => initialScale6.get() * scale8.get());
+	const combinedScale7 = useTransform(() => initialScale7.get() * scale9.get());
 
 	const combinedScales = [combinedScale1, combinedScale2, combinedScale3, combinedScale4, combinedScale5, combinedScale6, combinedScale7];
 	const opacities = [opacity1, opacity2, opacity3, opacity4, opacity5, opacity6, opacity7];
@@ -95,7 +95,7 @@ export function ZoomParallax({ images }: ZoomParallaxProps) {
 										scale: combinedScale,
 										opacity,
 										y: initialY
-									}}
+									} as any}
 									className="absolute inset-0 flex items-center justify-center [&>div]:!-top-[10vh] [&>div]:!-left-[25vw] [&>div]:!h-[45vh] [&>div]:!w-[20vw]"
 								>
 									<div className="relative h-[45vh] w-[20vw] bg-white/95 backdrop-blur-sm rounded-2xl p-4 md:p-6 flex flex-col justify-center shadow-lg border border-white/20">
@@ -119,7 +119,7 @@ export function ZoomParallax({ images }: ZoomParallaxProps) {
 										scale: combinedScale,
 										opacity,
 										y: initialY
-									}}
+									} as any}
 									className="absolute inset-0 flex items-center justify-center [&>div]:!left-[27.5vw] [&>div]:!h-[25vh] [&>div]:!w-[25vw]"
 								>
 									<div className="relative h-[25vh] w-[25vw] bg-white/95 backdrop-blur-sm rounded-2xl p-4 md:p-6 flex flex-col justify-center shadow-lg border border-white/20">
@@ -144,7 +144,7 @@ export function ZoomParallax({ images }: ZoomParallaxProps) {
 										scale: combinedScale,
 										opacity,
 										y: initialY
-									}}
+									} as any}
 									className="absolute inset-0 flex items-center justify-center [&>div]:!top-[22.5vh] [&>div]:!left-[25vw] [&>div]:!h-[15vh] [&>div]:!w-[15vw]"
 								>
 									<div className="relative h-[15vh] w-[15vw] bg-white rounded-3xl p-2 md:p-3 flex items-center justify-center shadow-xl overflow-hidden border border-slate-100">
@@ -173,7 +173,7 @@ export function ZoomParallax({ images }: ZoomParallaxProps) {
 									scale: combinedScale,
 									opacity,
 									y: initialY
-								}}
+								} as any}
 								className={`absolute inset-0 flex items-center justify-center ${
 									index === 0 ? '' :
 									index === 1 ? '[&>div]:!-top-[30vh] [&>div]:!left-[5vw] [&>div]:!h-[30vh] [&>div]:!w-[35vw]' : 
