@@ -163,17 +163,23 @@ export default function Step1DataMasjid({ formData, setFormData }: Step1Props) {
   }, [formData.postalCode])
 
   const loadRegencies = async (provinceId: string) => {
+    console.log('Loading regencies for province:', provinceId)
     const data = await getRegencies(provinceId)
+    console.log('Regencies loaded:', data.length)
     setRegencies(data)
   }
 
   const loadDistricts = async (regencyId: string) => {
+    console.log('Loading districts for regency:', regencyId)
     const data = await getDistricts(regencyId)
+    console.log('Districts loaded:', data.length, data.map(d => d.name))
     setDistricts(data)
   }
 
   const loadVillages = async (districtId: string) => {
+    console.log('Loading villages for district:', districtId)
     const data = await getVillages(districtId)
+    console.log('Villages loaded:', data.length)
     setVillages(data)
   }
 
