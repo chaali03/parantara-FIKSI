@@ -8,7 +8,7 @@ const testimonials = [
   {
     name: "Ahmad Fauzi",
     role: "Pengurus Masjid Al-Ikhlas",
-    content: "Alhamdulillah, dengan DanaMasjid donasi masjid kami meningkat 300%. Sistemnya sangat mudah dan transparan! Jamaah jadi lebih percaya untuk berdonasi.",
+    content: "Alhamdulillah, dengan DanaMasjid transparansi keuangan masjid kami meningkat drastis. Sistemnya sangat mudah dan transparan! Jamaah jadi lebih percaya untuk berdonasi.",
     rating: 5,
     color: "#3b82f6",
     avatar: "https://i.pravatar.cc/150?img=12",
@@ -16,7 +16,7 @@ const testimonials = [
   {
     name: "Siti Nurhaliza",
     role: "Donatur Aktif",
-    content: "Akhirnya ada platform yang benar-benar transparan. Saya bisa lihat kemana donasi saya digunakan secara real-time. Sangat recommended!",
+    content: "Akhirnya ada platform yang benar-benar transparan. Saya bisa lihat laporan keuangan masjid secara real-time dan kemana donasi saya digunakan. Sangat recommended!",
     rating: 5,
     color: "#10b981",
     avatar: "https://i.pravatar.cc/150?img=47",
@@ -98,7 +98,7 @@ export function TestimonialsSection() {
             </span>
           </h2>
           <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-            Ribuan masjid dan donatur telah mempercayai DanaMasjid untuk mengelola donasi mereka
+            Ribuan masjid dan jamaah telah mempercayai DanaMasjid untuk transparansi keuangan masjid
           </p>
         </div>
 

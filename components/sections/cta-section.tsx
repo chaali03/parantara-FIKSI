@@ -117,7 +117,7 @@ export function CTASection() {
           </div>
           <div className="text-center">
             <p className="text-7xl md:text-5xl lg:text-7xl font-light text-foreground">Rp 120M+</p>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Total Donasi</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Laporan Dipublikasikan</p>
           </div>
         </div>
       </div>

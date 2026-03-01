@@ -46,10 +46,10 @@ export function FeaturesSection() {
               viewport={{ once: true }}
             >
               <h2 className="text-4xl md:text-5xl font-bold mb-6 text-balance">
-                Kelola donasi masjid dengan mudah
+                Kelola keuangan masjid dengan transparan
               </h2>
               <p className="text-muted-foreground leading-relaxed text-lg">
-                Pantau pemasukan, kelola program masjid, dan berkomunikasi dengan donatur dari satu antarmuka yang intuitif dan modern.
+                Pantau pemasukan dan pengeluaran, kelola program masjid, publikasikan laporan keuangan real-time, dan tingkatkan kepercayaan jamaah dengan transparansi penuh.
               </p>
             </motion.div>
 
