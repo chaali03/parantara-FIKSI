@@ -64,12 +64,13 @@ export function HomePage() {
                 progress > 0.2 ? "border-2 border-blue-100 dark:border-blue-800" : ""
               }`}
             >
-              <div className="w-[80%] aspect-square rounded-full bg-gradient-to-r from-purple-400 via-pink-500 to-red-500 dark:from-purple-600 dark:via-pink-600 dark:to-red-600 p-0.5 flex items-center justify-center relative">
+              <div className="w-[80%] aspect-square rounded-full bg-gradient-to-r from-blue-400 via-cyan-400 to-yellow-400 dark:from-blue-600 dark:via-cyan-600 dark:to-yellow-600 p-0.5 flex items-center justify-center relative">
                 <div className="w-full h-full rounded-full bg-[#ffffff] dark:bg-black flex items-center justify-center relative">
                   <div
-                    className="absolute w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-3 md:border-4 border-white dark:border-gray-800 shadow-lg transition-transform duration-300 ease-out z-0"
+                    className="absolute w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-3 md:border-4 border-white dark:border-gray-800 shadow-lg transition-all duration-500 ease-out z-0"
                     style={{
-                      transform: `translate(${expandRadius * Math.cos(0)}px, ${expandRadius * Math.sin(0)}px)`,
+                      transform: `translate(${expandRadius * Math.cos(0)}px, ${expandRadius * Math.sin(0)}px) scale(${progress > 0.1 ? 1 : 0})`,
+                      opacity: progress > 0.1 ? 1 : 0,
                     }}
                   >
                     <img
@@ -80,9 +81,10 @@ export function HomePage() {
                   </div>
 
                   <div
-                    className="absolute w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-3 md:border-4 border-white dark:border-gray-800 shadow-lg transition-transform duration-300 ease-out z-0"
+                    className="absolute w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-3 md:border-4 border-white dark:border-gray-800 shadow-lg transition-all duration-500 ease-out z-0"
                     style={{
-                      transform: `translate(${expandRadius * Math.cos(Math.PI / 4)}px, ${expandRadius * Math.sin(Math.PI / 4)}px)`,
+                      transform: `translate(${expandRadius * Math.cos(Math.PI / 4)}px, ${expandRadius * Math.sin(Math.PI / 4)}px) scale(${progress > 0.15 ? 1 : 0})`,
+                      opacity: progress > 0.15 ? 1 : 0,
                     }}
                   >
                     <img
@@ -93,9 +95,10 @@ export function HomePage() {
                   </div>
 
                   <div
-                    className="absolute w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-3 md:border-4 border-white dark:border-gray-800 shadow-lg transition-transform duration-300 ease-out z-0"
+                    className="absolute w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-3 md:border-4 border-white dark:border-gray-800 shadow-lg transition-all duration-500 ease-out z-0"
                     style={{
-                      transform: `translate(${expandRadius * Math.cos(Math.PI / 2)}px, ${expandRadius * Math.sin(Math.PI / 2)}px)`,
+                      transform: `translate(${expandRadius * Math.cos(Math.PI / 2)}px, ${expandRadius * Math.sin(Math.PI / 2)}px) scale(${progress > 0.2 ? 1 : 0})`,
+                      opacity: progress > 0.2 ? 1 : 0,
                     }}
                   >
                     <img
@@ -106,9 +109,10 @@ export function HomePage() {
                   </div>
 
                   <div
-                    className="absolute w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-3 md:border-4 border-white dark:border-gray-800 shadow-lg transition-transform duration-300 ease-out z-0"
+                    className="absolute w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-3 md:border-4 border-white dark:border-gray-800 shadow-lg transition-all duration-500 ease-out z-0"
                     style={{
-                      transform: `translate(${expandRadius * Math.cos((3 * Math.PI) / 4)}px, ${expandRadius * Math.sin((3 * Math.PI) / 4)}px)`,
+                      transform: `translate(${expandRadius * Math.cos((3 * Math.PI) / 4)}px, ${expandRadius * Math.sin((3 * Math.PI) / 4)}px) scale(${progress > 0.25 ? 1 : 0})`,
+                      opacity: progress > 0.25 ? 1 : 0,
                     }}
                   >
                     <img
@@ -119,9 +123,10 @@ export function HomePage() {
                   </div>
 
                   <div
-                    className="absolute w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-3 md:border-4 border-white dark:border-gray-800 shadow-lg transition-transform duration-300 ease-out z-0"
+                    className="absolute w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-3 md:border-4 border-white dark:border-gray-800 shadow-lg transition-all duration-500 ease-out z-0"
                     style={{
-                      transform: `translate(${expandRadius * Math.cos(Math.PI)}px, ${expandRadius * Math.sin(Math.PI)}px)`,
+                      transform: `translate(${expandRadius * Math.cos(Math.PI)}px, ${expandRadius * Math.sin(Math.PI)}px) scale(${progress > 0.3 ? 1 : 0})`,
+                      opacity: progress > 0.3 ? 1 : 0,
                     }}
                   >
                     <img
@@ -132,9 +137,10 @@ export function HomePage() {
                   </div>
 
                   <div
-                    className="absolute w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-3 md:border-4 border-white dark:border-gray-800 shadow-lg transition-transform duration-300 ease-out z-0"
+                    className="absolute w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-3 md:border-4 border-white dark:border-gray-800 shadow-lg transition-all duration-500 ease-out z-0"
                     style={{
-                      transform: `translate(${expandRadius * Math.cos((5 * Math.PI) / 4)}px, ${expandRadius * Math.sin((5 * Math.PI) / 4)}px)`,
+                      transform: `translate(${expandRadius * Math.cos((5 * Math.PI) / 4)}px, ${expandRadius * Math.sin((5 * Math.PI) / 4)}px) scale(${progress > 0.35 ? 1 : 0})`,
+                      opacity: progress > 0.35 ? 1 : 0,
                     }}
                   >
                     <img
@@ -145,9 +151,10 @@ export function HomePage() {
                   </div>
 
                   <div
-                    className="absolute w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-3 md:border-4 border-white dark:border-gray-800 shadow-lg transition-transform duration-300 ease-out z-0"
+                    className="absolute w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-3 md:border-4 border-white dark:border-gray-800 shadow-lg transition-all duration-500 ease-out z-0"
                     style={{
-                      transform: `translate(${expandRadius * Math.cos((3 * Math.PI) / 2)}px, ${expandRadius * Math.sin((3 * Math.PI) / 2)}px)`,
+                      transform: `translate(${expandRadius * Math.cos((3 * Math.PI) / 2)}px, ${expandRadius * Math.sin((3 * Math.PI) / 2)}px) scale(${progress > 0.4 ? 1 : 0})`,
+                      opacity: progress > 0.4 ? 1 : 0,
                     }}
                   >
                     <img
@@ -158,9 +165,10 @@ export function HomePage() {
                   </div>
 
                   <div
-                    className="absolute w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-3 md:border-4 border-white dark:border-gray-800 shadow-lg transition-transform duration-300 ease-out z-0"
+                    className="absolute w-16 h-16 sm:w-20 sm:h-20 md:w-24 md:h-24 rounded-xl sm:rounded-2xl overflow-hidden border-2 sm:border-3 md:border-4 border-white dark:border-gray-800 shadow-lg transition-all duration-500 ease-out z-0"
                     style={{
-                      transform: `translate(${expandRadius * Math.cos((7 * Math.PI) / 4)}px, ${expandRadius * Math.sin((7 * Math.PI) / 4)}px)`,
+                      transform: `translate(${expandRadius * Math.cos((7 * Math.PI) / 4)}px, ${expandRadius * Math.sin((7 * Math.PI) / 4)}px) scale(${progress > 0.45 ? 1 : 0})`,
+                      opacity: progress > 0.45 ? 1 : 0,
                     }}
                   >
                     <img
@@ -175,11 +183,11 @@ export function HomePage() {
                       progress > 0.5 ? "opacity-100" : "opacity-0"
                     }`}
                   >
-                    <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 dark:text-white text-center mb-1 sm:mb-2">Mudah</h1>
-                    <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 dark:text-white text-center mb-2 sm:mb-3 md:mb-4">Untuk Semua Donatur</h1>
+                    <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 dark:text-white text-center mb-1 sm:mb-2">Transparan</h1>
+                    <h1 className="text-xl sm:text-2xl md:text-3xl lg:text-4xl font-bold text-gray-800 dark:text-white text-center mb-2 sm:mb-3 md:mb-4">Untuk Semua Jamaah</h1>
 
                     <p className="text-xs sm:text-sm md:text-base text-gray-500 dark:text-gray-400 text-center max-w-[200px] sm:max-w-xs md:max-w-sm">
-                      Donasi transparan, laporan jelas, dan pengalaman yang menyenangkan di semua perangkat.
+                      Laporan keuangan real-time, transparansi penuh, dan pengalaman yang menyenangkan di semua perangkat.
                     </p>
                   </div>
                 </div>

@@ -48,7 +48,7 @@ export function DonationProgramsSection() {
               </span>
             </h2>
             <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-              Platform donasi masjid terpercaya dengan fitur lengkap dan mudah digunakan
+              Platform manajemen keuangan masjid terpercaya dengan transparansi penuh dan fitur lengkap
             </p>
           </motion.div>
         </div>
@@ -69,18 +69,18 @@ export function DonationProgramsSection() {
             whileHover={{ y: -8, scale: 1.02 }}
             className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-2xl transition-all duration-300"
           >
-            <div className="flex flex-col items-center justify-center space-y-4">
+            <div className="flex flex-col items-center justify-center space-y-6">
               <motion.div 
                 initial={{ scale: 0, rotate: -180 }}
                 whileInView={{ scale: 1, rotate: 0 }}
                 transition={{ duration: 0.6, delay: 0.3, type: "spring", stiffness: 200 }}
                 viewport={{ once: true }}
-                className="relative w-full h-20 flex items-center justify-center"
+                className="relative w-full h-28 md:h-32 flex items-center justify-center mb-2"
               >
                 <img 
                   src="/images/program/terpercaya.webp" 
-                  alt="Terpercaya" 
-                  className="h-34 w-34 object-contain"
+                  alt="Transparansi" 
+                  className="h-24 w-24 md:h-32 md:w-32 object-contain"
                 />
               </motion.div>
               <motion.h3 
@@ -88,18 +88,18 @@ export function DonationProgramsSection() {
                 whileInView={{ opacity: 1 }}
                 transition={{ duration: 0.4, delay: 0.5 }}
                 viewport={{ once: true }}
-                className="text-2xl font-bold text-slate-900"
+                className="text-2xl font-bold text-slate-900 mt-2"
               >
-                Terpercaya
+                Transparansi
               </motion.h3>
               <motion.p 
                 initial={{ opacity: 0 }}
                 whileInView={{ opacity: 1 }}
                 transition={{ duration: 0.4, delay: 0.6 }}
                 viewport={{ once: true }}
-                className="text-slate-600 text-center text-base leading-relaxed"
+                className="text-slate-600 text-center text-base leading-relaxed mt-1"
               >
-                Platform donasi masjid yang telah <span className="font-semibold text-blue-600">terverifikasi</span> dan dipercaya ribuan pengguna
+                Platform manajemen keuangan masjid yang <span className="font-semibold text-blue-600">transparan</span> dan dipercaya ribuan masjid
               </motion.p>
               <motion.div 
                 initial={{ opacity: 0, scale: 0 }}
@@ -197,7 +197,7 @@ export function DonationProgramsSection() {
               <div>
                 <h3 className="text-2xl font-bold text-slate-900 mb-2">Mudah Digunakan</h3>
                 <p className="text-slate-600 text-base leading-relaxed">
-                  Proses donasi yang <span className="font-semibold">simpel dan cepat</span> dengan antarmuka yang user-friendly.
+                  Proses pencatatan keuangan yang <span className="font-semibold">simpel dan cepat</span> dengan antarmuka yang user-friendly untuk pengurus masjid.
                 </p>
               </div>
 
@@ -236,7 +236,7 @@ export function DonationProgramsSection() {
                 <div>
                   <h3 className="text-2xl font-bold text-slate-900 mb-2">Laporan Real-time</h3>
                   <p className="text-slate-600 text-base leading-relaxed">
-                    Dashboard interaktif dengan grafik dan statistik donasi yang <span className="font-semibold">update secara otomatis</span> untuk transparansi maksimal.
+                    Dashboard interaktif dengan grafik dan statistik keuangan yang <span className="font-semibold">update secara otomatis</span> untuk transparansi maksimal kepada jamaah.
                   </p>
                 </div>
 

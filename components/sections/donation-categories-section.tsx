@@ -275,7 +275,7 @@ export function DonationCategoriesSection() {
                       <button
                         className={`w-full py-2.5 rounded-xl font-semibold transition-all duration-300 bg-gradient-to-r ${item.color} text-white hover:shadow-lg transform hover:scale-105`}
                       >
-                        Donasi Sekarang
+                        Dukung Program
                       </button>
                     </div>
                   </div>

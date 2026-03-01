@@ -78,7 +78,7 @@ export function StatsSection() {
             className={`text-center transition-all duration-1000 delay-400 ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
           >
             <p className="font-light text-foreground mb-2 text-6xl md:text-7xl leading-none">{users.value}</p>
-            <p className="text-xs text-muted-foreground uppercase tracking-wider">Donatur</p>
+            <p className="text-xs text-muted-foreground uppercase tracking-wider">Jamaah Terhubung</p>
           </div>
         </div>
       </div>

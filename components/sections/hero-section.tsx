@@ -154,7 +154,7 @@ export function HeroSection() {
             className={`transition-all duration-1000 delay-[800ms] ${isVisible ? "opacity-100 translate-y-0" : "opacity-0 -translate-y-4"}`}
           >
             <h1 className="font-serif text-[3.5rem] sm:text-[4.5rem] md:text-[5.5rem] lg:text-[6.5rem] xl:text-[7.5rem] 2xl:text-[8.5rem] font-normal leading-tight mb-6 w-full px-4 max-w-6xl mx-auto text-balance break-words">
-              <AnimatedText text="Akses Terbuka Laporan Keuangan" delay={0.3} />
+              <AnimatedText text="Transparansi Keuangan Masjid" delay={0.3} />
             </h1>
           </div>
         </div>
