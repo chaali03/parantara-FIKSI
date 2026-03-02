@@ -4,8 +4,6 @@
  * Library: @fingerprintjs/fingerprintjs
  */
 
-import FingerprintJS from '@fingerprintjs/fingerprintjs';
-
 export interface DeviceFingerprint {
   id: string;
   visitorId: string;
@@ -31,11 +29,17 @@ export interface DeviceFingerprint {
 let fpPromise: Promise<any> | null = null;
 
 /**
- * Initialize FingerprintJS (singleton pattern)
+ * Initialize FingerprintJS (singleton pattern with dynamic import)
  */
 async function initFingerprint() {
+  if (typeof window === 'undefined') {
+    throw new Error('FingerprintJS can only run in browser');
+  }
+  
   if (!fpPromise) {
-    fpPromise = FingerprintJS.load({
+    // Dynamic import to avoid SSR issues
+    const FingerprintJS = await import('@fingerprintjs/fingerprintjs');
+    fpPromise = FingerprintJS.default.load({
       monitoring: false, // Disable monitoring untuk privacy
     });
   }
@@ -47,6 +51,11 @@ async function initFingerprint() {
  * Jauh lebih akurat dari implementasi manual
  */
 export async function generateDeviceFingerprint(): Promise<DeviceFingerprint> {
+  // Check if running in browser
+  if (typeof window === 'undefined') {
+    throw new Error('Device fingerprinting only works in browser');
+  }
+  
   try {
     // Load FingerprintJS
     const fp = await initFingerprint();
