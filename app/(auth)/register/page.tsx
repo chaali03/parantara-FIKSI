@@ -539,18 +539,19 @@ export default function RegisterPage() {
           name: formData.name
         })
         
+        setSuccess('Membuat akun...')
+        
         const user = await signUpWithEmail(formData.email, formData.password, {
           name: formData.name,
           nickname: formData.nickname.toLowerCase()
         })
 
         console.log('Step 3: Firebase registration successful! User ID:', user.uid)
-        setSuccess('Pendaftaran berhasil! Mengalihkan ke pendaftaran masjid...')
+        setSuccess('Pendaftaran berhasil!')
         
-        setTimeout(() => {
-          console.log('Step 3: Redirecting to /daftar-masjid')
-          router.push('/daftar-masjid')
-        }, 1500)
+        // Redirect immediately without delay
+        console.log('Step 3: Redirecting to /daftar-masjid')
+        router.push('/daftar-masjid')
       }
     } catch (err: any) {
       console.error('=== REGISTRATION ERROR ===')
