@@ -17,6 +17,7 @@ interface FlipCardProps {
     total: number;
     phase: AnimationPhase;
     target: { x: number; y: number; rotation: number; scale: number; opacity: number };
+    content: { arabic: string; indo: string; desc: string };
 }
 
 // --- FlipCard Component ---
@@ -26,9 +27,8 @@ const IMG_HEIGHT = 85;
 function FlipCard({
     src,
     index,
-    total,
-    phase,
     target,
+    content,
 }: FlipCardProps) {
     return (
         <motion.div
@@ -76,12 +76,22 @@ function FlipCard({
 
                 {/* Back Face */}
                 <div
-                    className="absolute inset-0 h-full w-full overflow-hidden rounded-xl shadow-lg bg-gray-900 flex flex-col items-center justify-center p-4 border border-gray-700"
+                    className="absolute inset-0 h-full w-full overflow-hidden rounded-xl shadow-lg bg-gradient-to-br from-emerald-600 to-emerald-800 flex flex-col items-center justify-center p-3 border border-emerald-500"
                     style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
                 >
-                    <div className="text-center">
-                        <p className="text-[8px] font-bold text-blue-400 uppercase tracking-widest mb-1">Lihat</p>
-                        <p className="text-xs font-medium text-white">Detail</p>
+                    <div className="text-center space-y-1">
+                        {/* Arabic Text */}
+                        <p className="text-sm font-bold text-yellow-300 mb-1" style={{ fontFamily: 'serif' }}>
+                            {content.arabic}
+                        </p>
+                        {/* Indonesian Text */}
+                        <p className="text-[10px] font-semibold text-white uppercase tracking-wide">
+                            {content.indo}
+                        </p>
+                        {/* Description */}
+                        <p className="text-[7px] text-emerald-100 leading-tight mt-1">
+                            {content.desc}
+                        </p>
                     </div>
                 </div>
             </motion.div>
@@ -92,6 +102,30 @@ function FlipCard({
 // --- Main Hero Component ---
 const TOTAL_IMAGES = 20;
 const MAX_SCROLL = 3000; // Virtual scroll range
+
+// Card Content Data
+const CARD_CONTENT = [
+    { arabic: "الشَّفَافِيَّة", indo: "Transparansi", desc: "Laporan keuangan real-time" },
+    { arabic: "الأَمَانَة", indo: "Amanah", desc: "Pengelolaan dana terpercaya" },
+    { arabic: "الصَّدَقَة", indo: "Sedekah", desc: "Kemudahan berdonasi" },
+    { arabic: "البَرَكَة", indo: "Berkah", desc: "Manfaat yang berkelanjutan" },
+    { arabic: "التَّعَاوُن", indo: "Gotong Royong", desc: "Bersama membangun masjid" },
+    { arabic: "الإِخْلَاص", indo: "Ikhlas", desc: "Niat lillahi ta'ala" },
+    { arabic: "التَّقْوَى", indo: "Takwa", desc: "Menjaga kepercayaan umat" },
+    { arabic: "الرَّحْمَة", indo: "Rahmat", desc: "Kasih sayang untuk sesama" },
+    { arabic: "العِبَادَة", indo: "Ibadah", desc: "Mendekatkan diri kepada Allah" },
+    { arabic: "الإِحْسَان", indo: "Ihsan", desc: "Berbuat kebaikan maksimal" },
+    { arabic: "التَّوَكُّل", indo: "Tawakal", desc: "Berserah kepada Allah" },
+    { arabic: "الصَّبْر", indo: "Sabar", desc: "Istiqomah dalam kebaikan" },
+    { arabic: "الشُّكْر", indo: "Syukur", desc: "Bersyukur atas nikmat-Nya" },
+    { arabic: "التَّوْبَة", indo: "Taubat", desc: "Kembali kepada jalan-Nya" },
+    { arabic: "الدُّعَاء", indo: "Doa", desc: "Memohon ridho Allah" },
+    { arabic: "الزَّكَاة", indo: "Zakat", desc: "Membersihkan harta" },
+    { arabic: "الإِنْفَاق", indo: "Infaq", desc: "Menafkahkan di jalan Allah" },
+    { arabic: "الخَيْر", indo: "Kebaikan", desc: "Berbagi untuk sesama" },
+    { arabic: "البِرّ", indo: "Kebajikan", desc: "Amal saleh yang bermanfaat" },
+    { arabic: "الهِدَايَة", indo: "Hidayah", desc: "Petunjuk menuju kebenaran" },
+];
 
 // Unsplash Images
 const IMAGES = [
@@ -374,8 +408,9 @@ export default function IntroAnimation() {
                                 src={src}
                                 index={i}
                                 total={TOTAL_IMAGES}
-                                phase={introPhase} // Pass intro phase for initial animations
+                                phase={introPhase}
                                 target={target}
+                                content={CARD_CONTENT[i]}
                             />
                         );
                     })}
