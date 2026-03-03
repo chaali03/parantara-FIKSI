@@ -669,7 +669,7 @@ export default function RegisterPage() {
       initial="hidden"
       animate="visible"
       variants={containerVariants}
-      className="min-h-screen flex items-center justify-center p-4 pb-16 sm:pb-20 md:pb-4 relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50"
+      className="min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50"
     >
       {/* Video Background */}
       <VideoBackground 
@@ -685,7 +685,7 @@ export default function RegisterPage() {
         {/* Left Side - Register Form */}
         <motion.div
           variants={slideLeftVariants}
-          className="w-full lg:w-1/2 p-6 md:p-12 flex flex-col relative"
+          className="w-full lg:w-1/2 p-6 md:p-12 flex flex-col relative overflow-y-auto"
         >
           {/* Back Link - Top Left */}
           <motion.div
@@ -739,7 +739,7 @@ export default function RegisterPage() {
             />
           </motion.div>
 
-          <div className="w-full max-w-lg mx-auto space-y-6 flex-1 flex flex-col justify-center">
+          <div className="w-full max-w-lg mx-auto space-y-6 flex-1 flex flex-col py-4">
             {/* Header */}
             <motion.div 
               custom={1}
@@ -1092,17 +1092,19 @@ export default function RegisterPage() {
                         <motion.button
                           type="button"
                           onClick={handleResendOTP}
-                          disabled={resendCountdown > 0 || loading}
+                          disabled={resendCountdown > 0 || loading || rateLimitRetryAfter !== null}
                           whileHover={{ scale: 1.05 }}
                           whileTap={{ scale: 0.95 }}
                           className={`text-sm font-semibold transition-all ${
-                            resendCountdown > 0 
+                            resendCountdown > 0 || rateLimitRetryAfter !== null
                               ? 'text-gray-400 cursor-not-allowed' 
                               : 'text-blue-600 hover:text-blue-700'
                           }`}
                         >
                           {resendCountdown > 0 
                             ? `Kirim Ulang dalam ${resendCountdown}s` 
+                            : rateLimitRetryAfter !== null
+                            ? 'Tunggu sebentar...'
                             : 'Kirim Ulang Kode'}
                         </motion.button>
                       </motion.div>
@@ -1339,7 +1341,7 @@ export default function RegisterPage() {
                   whileHover="hover"
                   whileTap="tap"
                   className="flex-1 py-4 bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 rounded-xl font-semibold hover:from-yellow-500 hover:to-yellow-600 transition-all shadow-md text-base disabled:opacity-50 disabled:cursor-not-allowed"
-                  disabled={loading || (currentStep === 3 && passwordStrength === 'weak')}
+                  disabled={loading || rateLimitRetryAfter !== null || (currentStep === 3 && passwordStrength === 'weak')}
                 >
                   {loading ? (
                     <motion.div 
@@ -1447,6 +1449,7 @@ export default function RegisterPage() {
                 />
               </Link>
             </motion.p>
+
           </div>
         </motion.div>
 
@@ -1484,18 +1487,23 @@ export default function RegisterPage() {
         </motion.div>
       </motion.div>
 
-      {/* Footer */}
+      {/* Footer Below Card */}
       <motion.div
-        variants={footerVariants}
-        className="absolute bottom-2 sm:bottom-4 md:bottom-6 left-0 right-0 text-center text-[9px] sm:text-[10px] md:text-xs text-white/90 z-20 px-4"
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 1.5, duration: 0.6 }}
+        className="relative z-20 mt-4 w-full max-w-7xl"
       >
-        <p className="flex flex-col sm:flex-row items-center justify-center gap-0.5 sm:gap-1 md:gap-2">
+        <div className="flex flex-row items-center justify-center gap-2 text-[10px] sm:text-xs text-white/90">
           <span>Hak Cipta @danamasjid 2026</span>
-          <span className="hidden sm:inline">|</span>
-          <Link href="/privacy-policy" className="hover:text-white transition-colors underline">
+          <span>|</span>
+          <Link 
+            href="/privacy-policy" 
+            className="hover:text-white transition-colors underline"
+          >
             Kebijakan Privasi
           </Link>
-        </p>
+        </div>
       </motion.div>
     </motion.div>
   )
