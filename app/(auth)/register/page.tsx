@@ -9,6 +9,8 @@ import Image from "next/image"
 import { useAuth } from "@/lib/auth-context"
 import { VideoBackground } from "@/components/auth/video-background"
 import { useRegisterStep1, useVerifyOTP } from "@/lib/hooks/use-auth"
+import { RateLimitAlert } from "@/components/ui/rate-limit-alert"
+import { ApiError } from "@/lib/api-client"
 
 export default function RegisterPage() {
   const router = useRouter()
@@ -40,6 +42,7 @@ export default function RegisterPage() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState("")
   const [resendCountdown, setResendCountdown] = useState(0)
+  const [rateLimitRetryAfter, setRateLimitRetryAfter] = useState<number | null>(null)
   const [passwordStrength, setPasswordStrength] = useState<'weak' | 'medium' | 'strong' | null>(null)
   const [passwordMatch, setPasswordMatch] = useState<boolean | null>(null)
   const [nicknameChecking, setNicknameChecking] = useState(false)
@@ -580,8 +583,15 @@ export default function RegisterPage() {
       console.error('Error object:', err)
       console.error('Error message:', err?.message)
       console.error('Error code:', err?.code)
-      const errorMessage = err?.message || err?.code || 'Terjadi kesalahan. Silakan coba lagi.'
-      setError(errorMessage)
+      
+      // Handle rate limit error
+      if (err instanceof ApiError && err.status === 429) {
+        setRateLimitRetryAfter(err.retryAfter || 30)
+        setError(err.message || 'Terlalu banyak permintaan. Silakan tunggu beberapa saat.')
+      } else {
+        const errorMessage = err?.message || err?.code || 'Terjadi kesalahan. Silakan coba lagi.'
+        setError(errorMessage)
+      }
     } finally {
       setLoading(false)
       console.log('=== FORM SUBMIT END ===')
@@ -622,7 +632,7 @@ export default function RegisterPage() {
   }
 
   const handleResendOTP = async () => {
-    if (resendCountdown > 0) return
+    if (resendCountdown > 0 || rateLimitRetryAfter) return
     
     setLoading(true)
     setError("")
@@ -641,8 +651,14 @@ export default function RegisterPage() {
       } else {
         setError(result.message || 'Gagal mengirim OTP')
       }
-    } catch (err) {
-      setError('Terjadi kesalahan. Silakan coba lagi.')
+    } catch (err: any) {
+      // Handle rate limit error
+      if (err instanceof ApiError && err.status === 429) {
+        setRateLimitRetryAfter(err.retryAfter || 30)
+        setError(err.message || 'Terlalu banyak permintaan. Silakan tunggu beberapa saat.')
+      } else {
+        setError('Terjadi kesalahan. Silakan coba lagi.')
+      }
     } finally {
       setLoading(false)
     }
@@ -797,9 +813,20 @@ export default function RegisterPage() {
 
             {/* Register Form with Steps */}
             <form onSubmit={handleSubmit} className="space-y-4 overflow-visible">
+              {/* Rate Limit Alert */}
+              {rateLimitRetryAfter && (
+                <RateLimitAlert 
+                  retryAfter={rateLimitRetryAfter} 
+                  onComplete={() => {
+                    setRateLimitRetryAfter(null)
+                    setError("")
+                  }}
+                />
+              )}
+              
               {/* Success/Error Messages with Animation */}
               <AnimatePresence mode="wait">
-                {error && (
+                {error && !rateLimitRetryAfter && (
                   <motion.div
                     key="error"
                     initial={{ opacity: 0, y: -10, scale: 0.95 }}

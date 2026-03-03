@@ -13,7 +13,8 @@ class ApiError extends Error {
   constructor(
     message: string,
     public status?: number,
-    public data?: any
+    public data?: any,
+    public retryAfter?: number
   ) {
     super(message)
     this.name = 'ApiError'
@@ -24,6 +25,17 @@ async function handleResponse<T>(response: Response): Promise<ApiResponse<T>> {
   const data = await response.json()
   
   if (!response.ok) {
+    // Handle rate limit specifically
+    if (response.status === 429) {
+      const retryAfter = data.retryAfter || 30
+      throw new ApiError(
+        data.message || 'Terlalu banyak permintaan. Silakan tunggu beberapa saat.',
+        response.status,
+        data,
+        retryAfter
+      )
+    }
+    
     throw new ApiError(
       data.message || 'An error occurred',
       response.status,
