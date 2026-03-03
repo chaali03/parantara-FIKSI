@@ -67,6 +67,12 @@ export function middleware(request: NextRequest) {
     return NextResponse.next()
   }
   
+  // Skip rate limiting for GET requests to pages (only rate limit POST/API calls)
+  // This allows users to view the page even if rate limited, but prevents form submissions
+  if (request.method === 'GET' && !pathname.startsWith('/api')) {
+    return NextResponse.next()
+  }
+  
   // Get client IP (Vercel provides this via headers)
   const ip = request.headers.get('x-forwarded-for')?.split(',')[0] || 
              request.headers.get('x-real-ip') || 
