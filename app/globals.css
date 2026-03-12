@@ -6,17 +6,18 @@
 /* Critical CSS - Above the fold - Inlined for faster rendering */
 html {
   scroll-behavior: auto;
-  overflow-x: hidden;
-  overflow-y: scroll;
+  overflow: hidden;
 }
 
 body {
   overflow-x: hidden;
+  overflow-y: auto;
   position: relative;
   background-color: white;
   margin: 0;
   padding: 0;
   font-family: system-ui, -apple-system, sans-serif;
+  height: 100vh;
 }
 
 html, body {
@@ -24,16 +25,31 @@ html, body {
   background-color: white;
 }
 
-/* Prevent double scrollbar */
+/* Remove all custom overflow settings to prevent double scrollbar */
 #__next {
   overflow: visible;
 }
 
-body {
-  overflow: visible !important;
+main {
+  overflow: visible;
 }
 
-/* Loading spinner styles */
+/* Critical layout classes - inline for immediate use */
+.min-h-screen { min-height: 100vh; }
+.bg-white { background-color: white; }
+.flex { display: flex; }
+.items-center { align-items: center; }
+.justify-center { justify-content: center; }
+.w-full { width: 100%; }
+.relative { position: relative; }
+.absolute { position: absolute; }
+.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
+.object-cover { object-fit: cover; }
+.text-center { text-align: center; }
+.mx-auto { margin-left: auto; margin-right: auto; }
+.max-w-7xl { max-width: 80rem; }
+
+/* Loading spinner styles - critical */
 .loading-spinner {
   width: 2rem;
   height: 2rem;
@@ -48,33 +64,24 @@ body {
   to { transform: rotate(360deg); }
 }
 
-/* Utility classes for critical rendering */
-.min-h-screen { min-height: 100vh; }
-.bg-white { background-color: white; }
-.flex { display: flex; }
-.items-center { align-items: center; }
-.justify-center { justify-content: center; }
-.w-full { width: 100%; }
-.relative { position: relative; }
-
 /* Font optimization - defer non-critical font loading */
 @font-face {
   font-display: swap;
 }
 
-/* Defer scrollbar styles - not critical for initial render */
+/* Custom scrollbar styling - only on body */
 @media (min-width: 768px) {
-  html::-webkit-scrollbar {
+  body::-webkit-scrollbar {
     width: 6px;
   }
 
-  html::-webkit-scrollbar-track {
+  body::-webkit-scrollbar-track {
     background: linear-gradient(to bottom, #fef3c7 0%, #fde68a 100%);
     border-radius: 10px;
     margin: 2px;
   }
 
-  html::-webkit-scrollbar-thumb {
+  body::-webkit-scrollbar-thumb {
     background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
     border-radius: 10px;
     border: 1px solid #fef3c7;
@@ -83,19 +90,24 @@ body {
     box-shadow: 0 0 6px rgba(251, 191, 36, 0.4);
   }
 
-  html::-webkit-scrollbar-thumb:hover {
+  body::-webkit-scrollbar-thumb:hover {
     background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   }
 
-  html::-webkit-scrollbar-thumb:active {
+  body::-webkit-scrollbar-thumb:active {
     background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
   }
 }
 
 /* Firefox Scrollbar */
-* {
+body {
   scrollbar-width: thin;
   scrollbar-color: #fbbf24 #fef3c7;
+}
+
+/* Hide html scrollbar */
+html::-webkit-scrollbar {
+  display: none;
 }
 
 /* Video optimization for smooth playback */
@@ -278,6 +290,24 @@ video {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Image optimization */
+img {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+  image-rendering: optimize-contrast;
+}
+
+/* Optimize for better compression */
+.webp-optimized {
+  image-rendering: -webkit-optimize-contrast;
+  image-rendering: crisp-edges;
+}
+
+/* Prevent layout shifts for images */
+img[width][height] {
+  height: auto;
+}
+
 /* GPU acceleration for animations */
 .will-change-transform {
   will-change: transform;
@@ -327,38 +357,92 @@ video {
 }
 
 
-/* Simple CSS animations to replace framer-motion */
-@keyframes fadeIn {
+/* Performance-optimized animations - GPU accelerated */
+@keyframes optimizedFadeIn {
   from {
     opacity: 0;
-    transform: translateY(20px);
+    transform: translate3d(0, 20px, 0);
   }
   to {
     opacity: 1;
-    transform: translateY(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
-@keyframes slideInLeft {
+@keyframes optimizedSlideUp {
   from {
     opacity: 0;
-    transform: translateX(-30px);
+    transform: translate3d(0, 30px, 0);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
 }
 
-@keyframes slideInRight {
+@keyframes optimizedSlideLeft {
   from {
     opacity: 0;
-    transform: translateX(30px);
+    transform: translate3d(30px, 0, 0);
   }
   to {
     opacity: 1;
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
+}
+
+@keyframes optimizedScaleIn {
+  from {
+    opacity: 0;
+    transform: translate3d(0, 0, 0) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
+}
+
+/* Optimized animation classes */
+.animate-optimized-fade-in {
+  animation: optimizedFadeIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  will-change: transform, opacity;
+}
+
+.animate-optimized-slide-up {
+  animation: optimizedSlideUp 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  will-change: transform, opacity;
+}
+
+.animate-optimized-slide-left {
+  animation: optimizedSlideLeft 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  will-change: transform, opacity;
+}
+
+.animate-optimized-scale-in {
+  animation: optimizedScaleIn 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
+  will-change: transform, opacity;
+}
+
+/* Stagger delays for child elements */
+.animate-delay-100 { animation-delay: 0.1s; }
+.animate-delay-200 { animation-delay: 0.2s; }
+.animate-delay-300 { animation-delay: 0.3s; }
+.animate-delay-400 { animation-delay: 0.4s; }
+.animate-delay-500 { animation-delay: 0.5s; }
+
+/* Remove will-change after animation completes */
+.animate-optimized-fade-in,
+.animate-optimized-slide-up,
+.animate-optimized-slide-left,
+.animate-optimized-scale-in {
+  animation-fill-mode: both;
+}
+
+.animate-optimized-fade-in:not(.animating),
+.animate-optimized-slide-up:not(.animating),
+.animate-optimized-slide-left:not(.animating),
+.animate-optimized-scale-in:not(.animating) {
+  will-change: auto;
 }
 
 .dm-animated-char {

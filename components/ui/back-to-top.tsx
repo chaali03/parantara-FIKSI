@@ -1,23 +1,32 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
 import { ArrowUp } from "lucide-react"
 
 export function BackToTop() {
   const [isVisible, setIsVisible] = useState(false)
 
   useEffect(() => {
+    let rafId: number
+    let ticking = false
+
     const toggleVisibility = () => {
-      if (window.pageYOffset > 300) {
-        setIsVisible(true)
-      } else {
-        setIsVisible(false)
+      if (!ticking) {
+        rafId = requestAnimationFrame(() => {
+          // Use pageYOffset to avoid forced reflows
+          const scrollY = window.pageYOffset || document.documentElement.scrollTop
+          setIsVisible(scrollY > 300)
+          ticking = false
+        })
+        ticking = true
       }
     }
 
-    window.addEventListener("scroll", toggleVisibility)
-    return () => window.removeEventListener("scroll", toggleVisibility)
+    window.addEventListener("scroll", toggleVisibility, { passive: true })
+    return () => {
+      window.removeEventListener("scroll", toggleVisibility)
+      if (rafId) cancelAnimationFrame(rafId)
+    }
   }, [])
 
   const scrollToTop = () => {
@@ -28,21 +37,19 @@ export function BackToTop() {
   }
 
   return (
-    <AnimatePresence>
-      {isVisible && (
-        <motion.button
-          initial={{ opacity: 0, scale: 0.5, y: 20 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.5, y: 20 }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-          onClick={scrollToTop}
-          className="fixed bottom-8 right-8 z-40 p-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-full shadow-2xl hover:shadow-blue-500/50 transition-all duration-300"
-          aria-label="Back to top"
-        >
-          <ArrowUp className="w-6 h-6" />
-        </motion.button>
-      )}
-    </AnimatePresence>
+    <button
+      onClick={scrollToTop}
+      className={`fixed bottom-8 right-8 z-40 p-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white rounded-full shadow-2xl transition-all duration-300 transform ${
+        isVisible 
+          ? 'opacity-100 scale-100 translate-y-0' 
+          : 'opacity-0 scale-50 translate-y-4 pointer-events-none'
+      }`}
+      style={{
+        willChange: isVisible ? 'transform, opacity' : 'auto'
+      }}
+      aria-label="Back to top"
+    >
+      <ArrowUp className="w-6 h-6" />
+    </button>
   )
 }

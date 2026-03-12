@@ -1,5 +1,7 @@
 "use client"
 import { useEffect, useState } from "react"
+import { AnimatedSection } from "@/components/animations/animated-section"
+import { motion } from "framer-motion"
 
 function useCountUp(end: number, duration = 2000, suffix = "") {
   const [count, setCount] = useState(0)
@@ -27,61 +29,63 @@ function useCountUp(end: number, duration = 2000, suffix = "") {
     return () => cancelAnimationFrame(animationFrame)
   }, [end, duration, hasStarted])
 
-  return { value: count + suffix, start: () => setHasStarted(true), hasStarted }
+  return { 
+    value: hasStarted ? count + suffix : "0" + suffix, 
+    start: () => setHasStarted(true), 
+    hasStarted 
+  }
 }
 
 export function StatsSection() {
-  const [isVisible, setIsVisible] = useState(false)
+  const homes = useCountUp(15, 2500, "K+")
+  const cities = useCountUp(120, 2800, "")
+  const users = useCountUp(50, 3000, "K+")
 
-  const homes = useCountUp(15, 2000, "K+")
-  const cities = useCountUp(120, 2000, "")
-  const users = useCountUp(50, 2000, "K+")
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting && !isVisible) {
-          setIsVisible(true)
-          homes.start()
-          cities.start()
-          users.start()
-        }
-      },
-      { threshold: 0.3 },
-    )
-
-    const section = document.getElementById("stats-section")
-    if (section) observer.observe(section)
-
-    return () => observer.disconnect()
-  }, [isVisible])
+  const startCounters = () => {
+    setTimeout(() => homes.start(), 200)
+    setTimeout(() => cities.start(), 400)
+    setTimeout(() => users.start(), 600)
+  }
 
   return (
-    <section id="stats-section" className="py-24 px-6 bg-white">
+    <AnimatedSection animation="slideRotate" className="py-24 px-6 bg-white" id="stats-section">
       <div className="max-w-4xl mx-auto">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-12 lg:gap-16">
-          <div
-            className={`text-center transition-opacity duration-1000 delay-200 ${isVisible ? "opacity-100" : "opacity-0"}`}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            viewport={{ once: true }}
+            onViewportEnter={() => !homes.hasStarted && startCounters()}
+            className="text-center"
           >
             <p className="font-light text-foreground mb-2 text-6xl md:text-7xl leading-none">{homes.value}</p>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Masjid Terdaftar</p>
-          </div>
+          </motion.div>
 
-          <div
-            className={`text-center transition-opacity duration-1000 delay-300 ${isVisible ? "opacity-100" : "opacity-0"}`}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.3 }}
+            viewport={{ once: true }}
+            className="text-center"
           >
             <p className="font-light text-foreground mb-2 text-6xl md:text-7xl leading-none">{cities.value}</p>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Kota</p>
-          </div>
+          </motion.div>
 
-          <div
-            className={`text-center transition-opacity duration-1000 delay-400 ${isVisible ? "opacity-100" : "opacity-0"}`}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            viewport={{ once: true }}
+            className="text-center"
           >
             <p className="font-light text-foreground mb-2 text-6xl md:text-7xl leading-none">{users.value}</p>
             <p className="text-xs text-muted-foreground uppercase tracking-wider">Jamaah Terhubung</p>
-          </div>
+          </motion.div>
         </div>
       </div>
-    </section>
+    </AnimatedSection>
   )
 }

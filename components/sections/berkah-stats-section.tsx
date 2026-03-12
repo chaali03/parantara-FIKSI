@@ -1,42 +1,12 @@
 "use client"
 
-import { useRef, useState, useEffect } from "react"
+import { motion, useInView } from "framer-motion"
+import { useRef, useState } from "react"
 
 export function BerkahStatsSection() {
   const ref = useRef(null)
-  const [isInView, setIsInView] = useState(false)
+  const isInView = useInView(ref, { once: true, amount: 0.3 })
   const [textAnimationComplete, setTextAnimationComplete] = useState(false)
-  const [berAnimationComplete, setBerAnimationComplete] = useState(false)
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          setIsInView(true)
-        }
-      },
-      { threshold: 0.3 }
-    )
-
-    if (ref.current) {
-      observer.observe(ref.current)
-    }
-
-    return () => {
-      if (ref.current) {
-        observer.unobserve(ref.current)
-      }
-    }
-  }, [])
-
-  // Effect untuk mengecek ketika kedua animasi strip selesai
-  useEffect(() => {
-    if (isInView) {
-      // Simulate animation completion
-      setTimeout(() => setBerAnimationComplete(true), 1200)
-      setTimeout(() => setTextAnimationComplete(true), 1500)
-    }
-  }, [isInView])
 
   const stats = [
     { label: "Donasi Umum", value: "Rp 22.663.582", percentage: 46.7, color: "#3B82F6" },
@@ -49,62 +19,82 @@ export function BerkahStatsSection() {
   const totalPercentage = "+46.7%"
 
   return (
-    <section ref={ref} className="py-24 px-6 bg-white">
+    <section ref={ref} className="py-24 px-6 bg-gradient-to-b from-white to-slate-50">
       <div className="max-w-7xl mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12 md:gap-20 items-center">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center">
           
           {/* Left Side - BERKAH Text */}
           <div className="relative">
             {/* BERKAH Text with Strip Animation */}
             <div className="relative">
-              <div className={`relative ${isInView ? 'animate-slide-in-left' : 'opacity-0'}`}>
+              <motion.div
+                initial={{ opacity: 0, x: -50 }}
+                animate={isInView ? { opacity: 1, x: 0 } : {}}
+                transition={{ duration: 0.6, ease: "easeOut" }}
+                className="relative"
+              >
                 {/* BER Text */}
-                <div className="relative pb-2 sm:pb-4">
-                  {/* Animated Strip for BER - Behind text */}
-                  <div
-                    className={`absolute left-0 right-0 bottom-0 h-6 sm:h-8 md:h-10 lg:h-12 xl:h-14 bg-blue-600 rounded-sm pointer-events-none ${isInView ? 'animate-slide-in-right' : 'scale-x-0'}`}
-                    style={{ transformOrigin: 'left', zIndex: 0, animationDelay: '400ms' }}
-                  />
-                  
-                  <h2 
-                    className={`text-[80px] sm:text-[120px] md:text-[160px] lg:text-[200px] font-black leading-none text-white relative z-10 ${isInView ? 'animate-fade-in' : 'opacity-0'}`}
-                    style={{ animationDelay: '200ms' }}
+                <div className="relative inline-block">
+                  <motion.h2 
+                    className="text-[120px] md:text-[160px] lg:text-[200px] font-black leading-none text-blue-600"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={isInView ? { opacity: 1, y: 0 } : {}}
+                    transition={{ duration: 0.5, delay: 0.2 }}
                   >
                     BER
-                  </h2>
+                  </motion.h2>
+                  
+                  {/* Animated Strip for BER */}
+                  <motion.div
+                    className="absolute bottom-4 left-0 h-8 bg-blue-600"
+                    initial={{ width: 0 }}
+                    animate={isInView ? { width: "100%" } : {}}
+                    transition={{ duration: 0.8, delay: 0.4, ease: "easeInOut" }}
+                  />
                 </div>
 
                 {/* KAH Text */}
-                <div className="relative pb-2 sm:pb-4">
-                  {/* Animated Strip for KAH - Behind text */}
-                  <div
-                    className={`absolute left-0 right-0 bottom-0 h-6 sm:h-8 md:h-10 lg:h-12 xl:h-14 bg-yellow-500 rounded-sm pointer-events-none ${isInView ? 'animate-slide-in-right' : 'scale-x-0'}`}
-                    style={{ transformOrigin: 'left', zIndex: 0, animationDelay: '700ms' }}
-                  />
-                  
-                  <h2 
-                    className={`text-[80px] sm:text-[120px] md:text-[160px] lg:text-[200px] font-black leading-none text-white relative z-10 ${isInView ? 'animate-fade-in' : 'opacity-0'}`}
-                    style={{ animationDelay: '500ms' }}
+                <div className="relative inline-block">
+                  <motion.h2 
+                    className="text-[120px] md:text-[160px] lg:text-[200px] font-black leading-none text-yellow-500"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={isInView ? { opacity: 1, y: 0 } : {}}
+                    transition={{ duration: 0.5, delay: 0.5 }}
                   >
                     KAH
-                  </h2>
+                  </motion.h2>
+                  
+                  {/* Animated Strip for KAH */}
+                  <motion.div
+                    className="absolute bottom-4 left-0 h-8 bg-yellow-500"
+                    initial={{ width: 0 }}
+                    animate={isInView ? { width: "100%" } : {}}
+                    transition={{ duration: 0.8, delay: 0.7, ease: "easeInOut" }}
+                    onAnimationComplete={() => setTextAnimationComplete(true)}
+                  />
                 </div>
-              </div>
+              </motion.div>
 
               {/* Subtitle */}
-              <p
-                className={`text-lg md:text-xl text-slate-600 mt-6 max-w-md ${isInView ? 'animate-fade-in' : 'opacity-0'}`}
-                style={{ animationDelay: '1500ms' }}
+              <motion.p
+                initial={{ opacity: 0, y: 10 }}
+                animate={isInView ? { opacity: 1, y: 0 } : {}}
+                transition={{ duration: 0.5, delay: 1.5 }}
+                className="text-lg md:text-xl text-slate-600 mt-6 max-w-md"
               >
                 Transparansi penuh dalam setiap donasi yang masuk untuk kemakmuran masjid
-              </p>
+              </motion.p>
             </div>
           </div>
 
-          {/* Right Side - Chart (Show after text animations complete) */}
-          <div className="hidden md:block">
-            {(berAnimationComplete && textAnimationComplete) ? (
-              <div className="animate-fade-in" style={{ animationDelay: '200ms' }}>
+          {/* Right Side - Chart (Only show on desktop after text animation completes) */}
+          <div className="hidden lg:block">
+            {textAnimationComplete ? (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.8, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+              >
                 <div className="bg-white rounded-3xl p-8 shadow-xl">
                   {/* Total Donasi Header */}
                   <div className="mb-8">
@@ -139,7 +129,7 @@ export function BerkahStatsSection() {
                           const dashArray = `${(stat.percentage / 100) * circumference} ${circumference}`
                           
                           return (
-                            <circle
+                            <motion.circle
                               key={stat.label}
                               cx="50"
                               cy="50"
@@ -150,11 +140,9 @@ export function BerkahStatsSection() {
                               strokeDasharray={dashArray}
                               strokeDashoffset={-offset}
                               strokeLinecap="round"
-                              className="transition-all duration-1000 ease-out"
-                              style={{ 
-                                strokeDasharray: isInView ? dashArray : `0 ${circumference}`,
-                                transitionDelay: `${300 + index * 200}ms`
-                              }}
+                              initial={{ strokeDasharray: `0 ${circumference}` }}
+                              animate={{ strokeDasharray: dashArray }}
+                              transition={{ duration: 1, delay: 0.3 + index * 0.2, ease: "easeOut" }}
                             />
                           )
                         })}
@@ -162,11 +150,16 @@ export function BerkahStatsSection() {
 
                       {/* Center Icon */}
                       <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center">
+                        <motion.div 
+                          initial={{ scale: 0, rotate: -180 }}
+                          animate={{ scale: 1, rotate: 0 }}
+                          transition={{ duration: 0.6, delay: 0.2, type: "spring", stiffness: 200 }}
+                          className="w-20 h-20 bg-blue-50 rounded-full flex items-center justify-center"
+                        >
                           <svg className="w-10 h-10 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                           </svg>
-                        </div>
+                        </motion.div>
                       </div>
                     </div>
                   </div>
@@ -174,10 +167,12 @@ export function BerkahStatsSection() {
                   {/* Stats List */}
                   <div className="space-y-4">
                     {stats.map((stat, index) => (
-                      <div
+                      <motion.div
                         key={stat.label}
-                        className="flex items-center justify-between animate-slide-in-left"
-                        style={{ animationDelay: `${1200 + index * 100}ms` }}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ duration: 0.4, delay: 1.2 + index * 0.1 }}
+                        className="flex items-center justify-between"
                       >
                         <div className="flex items-center gap-3">
                           <div 
@@ -190,19 +185,24 @@ export function BerkahStatsSection() {
                           <div className="text-sm font-semibold text-slate-900">{stat.value}</div>
                           <div className="text-xs text-slate-500">{stat.percentage}%</div>
                         </div>
-                      </div>
+                      </motion.div>
                     ))}
                   </div>
                 </div>
-              </div>
+              </motion.div>
             ) : (
               // Placeholder to maintain layout
               <div className="h-[600px]" />
             )}
           </div>
 
-          {/* Mobile Chart (Show immediately when in view, but with its own animations) */}
-          <div className={`md:hidden ${isInView ? 'animate-fade-in' : 'opacity-0'}`} style={{ animationDelay: '1200ms' }}>
+          {/* Mobile Chart (Show immediately without waiting for text animation) */}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            animate={isInView ? { opacity: 1, y: 0 } : {}}
+            transition={{ duration: 0.6, delay: 0.5 }}
+            className="lg:hidden"
+          >
             <div className="bg-white rounded-3xl p-6 shadow-xl">
               {/* Total Donasi Header */}
               <div className="mb-6">
@@ -214,54 +214,32 @@ export function BerkahStatsSection() {
                 <p className="text-sm text-slate-500 mt-1">Kuartal Ini</p>
               </div>
 
-              {/* Simple Progress Bars for Mobile */}
-              <div className="space-y-4 mb-6">
+              {/* Stats List (Mobile) */}
+              <div className="space-y-3">
                 {stats.map((stat, index) => (
-                  <div
+                  <motion.div
                     key={stat.label}
-                    className={`${isInView ? 'animate-slide-in-left' : 'opacity-0'}`}
-                    style={{ animationDelay: `${1400 + index * 100}ms` }}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={isInView ? { opacity: 1, x: 0 } : {}}
+                    transition={{ duration: 0.4, delay: 0.7 + index * 0.1 }}
+                    className="flex items-center justify-between"
                   >
-                    <div className="flex items-center justify-between mb-1">
-                      <div className="flex items-center gap-2">
-                        <div 
-                          className="w-3 h-3 rounded-full"
-                          style={{ backgroundColor: stat.color }}
-                        />
-                        <span className="text-sm text-slate-700">{stat.label}</span>
-                      </div>
-                      <span className="text-sm font-semibold text-slate-900">{stat.percentage}%</span>
-                    </div>
-                    <div className="w-full bg-slate-100 rounded-full h-2">
-                      <div
-                        className="h-2 rounded-full transition-all duration-800 ease-out"
-                        style={{ 
-                          backgroundColor: stat.color,
-                          width: isInView ? `${stat.percentage}%` : '0%',
-                          transitionDelay: `${1600 + index * 100}ms`
-                        }}
+                    <div className="flex items-center gap-3">
+                      <div 
+                        className="w-3 h-3 rounded-full"
+                        style={{ backgroundColor: stat.color }}
                       />
+                      <span className="text-sm text-slate-700">{stat.label}</span>
                     </div>
-                    <div className="text-right mt-1">
-                      <span className="text-xs text-slate-500">{stat.value}</span>
+                    <div className="text-right">
+                      <div className="text-sm font-semibold text-slate-900">{stat.value}</div>
+                      <div className="text-xs text-slate-500">{stat.percentage}%</div>
                     </div>
-                  </div>
+                  </motion.div>
                 ))}
               </div>
-
-              {/* Total Stats */}
-              <div
-                className={`border-t border-slate-100 pt-4 ${isInView ? 'animate-fade-in' : 'opacity-0'}`}
-                style={{ animationDelay: '2000ms' }}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-slate-600">Total Donasi</span>
-                  <span className="text-sm font-semibold text-green-600">{totalPercentage}</span>
-                </div>
-                <div className="text-lg font-bold text-slate-900 mt-1">{totalDonasi}</div>
-              </div>
             </div>
-          </div>
+          </motion.div>
 
         </div>
       </div>

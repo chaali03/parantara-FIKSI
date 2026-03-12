@@ -1,4 +1,6 @@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
+import { AnimatedSection } from "@/components/animations/animated-section"
+import { motion } from "framer-motion"
 
 const faqs = [
   {
@@ -35,32 +37,72 @@ const faqs = [
 
 export function FAQSection() {
   return (
-    <section id="faq" className="py-32 px-6 pb-80">
+    <AnimatedSection animation="fadeIn" className="py-32 px-6 pb-80 overflow-hidden" id="faq">
       <div className="max-w-4xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-normal mb-6 text-balance font-serif">Pertanyaan yang Sering Diajukan</h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+        <motion.div 
+          initial={{ opacity: 0, rotateY: -45, scale: 0.8 }}
+          whileInView={{ opacity: 1, rotateY: 0, scale: 1 }}
+          transition={{ duration: 1, type: "spring", stiffness: 100 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <motion.h2 
+            initial={{ opacity: 0, y: -50, skewY: -10 }}
+            whileInView={{ opacity: 1, y: 0, skewY: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 150 }}
+            viewport={{ once: true }}
+            className="text-4xl md:text-5xl font-normal mb-6 text-balance font-serif"
+          >
+            Pertanyaan yang Sering Diajukan
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            viewport={{ once: true }}
+            className="text-muted-foreground max-w-2xl mx-auto leading-relaxed"
+          >
             Semua yang perlu Anda ketahui tentang DanaMasjid. Punya pertanyaan lain? Hubungi tim dukungan kami.
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
-        <Accordion type="single" collapsible className="space-y-3 py-0 my-0">
-          {faqs.map((faq, index) => (
-            <AccordionItem
-              key={index}
-              value={`item-${index}`}
-              className="bg-card border border-border rounded-xl px-6 data-[state=open]:border-foreground/30"
-            >
-              <AccordionTrigger className="text-left text-base font-medium text-foreground hover:no-underline py-5">
-                {faq.question}
-              </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground pb-5 leading-relaxed text-sm">
-                {faq.answer}
-              </AccordionContent>
-            </AccordionItem>
-          ))}
-        </Accordion>
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.2 }}
+          viewport={{ once: true }}
+        >
+          <Accordion type="single" collapsible className="space-y-3 py-0 my-0">
+            {faqs.map((faq, index) => (
+              <motion.div
+                key={index}
+                initial={{ opacity: 0, x: index % 2 === 0 ? -50 : 50, rotateY: index % 2 === 0 ? -15 : 15 }}
+                whileInView={{ opacity: 1, x: 0, rotateY: 0 }}
+                transition={{ 
+                  duration: 0.6, 
+                  delay: index * 0.1,
+                  type: "spring",
+                  stiffness: 100
+                }}
+                viewport={{ once: true }}
+                whileHover={{ scale: 1.02, transition: { duration: 0.2 } }}
+              >
+                <AccordionItem
+                  value={`item-${index}`}
+                  className="bg-card border border-border rounded-xl px-6 data-[state=open]:border-foreground/30"
+                >
+                  <AccordionTrigger className="text-left text-base font-medium text-foreground hover:no-underline py-5">
+                    {faq.question}
+                  </AccordionTrigger>
+                  <AccordionContent className="text-muted-foreground pb-5 leading-relaxed text-sm">
+                    {faq.answer}
+                  </AccordionContent>
+                </AccordionItem>
+              </motion.div>
+            ))}
+          </Accordion>
+        </motion.div>
       </div>
-    </section>
+    </AnimatedSection>
   )
 }

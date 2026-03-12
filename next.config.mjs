@@ -25,14 +25,7 @@ const nextConfig = {
   compress: true,
   poweredByHeader: false,
   
-  // Enable source maps in production for better debugging
-  productionBrowserSourceMaps: true, // Enable for better debugging and Lighthouse insights
-  
-  // Generate unique build IDs to prevent cache issues
-  generateBuildId: async () => {
-    return `build-${Date.now()}`
-  },
-  
+  // Enhanced compression
   experimental: {
     optimizePackageImports: ['lucide-react', 'recharts', 'framer-motion', 'lottie-react'],
     optimizeCss: true,
@@ -40,20 +33,15 @@ const nextConfig = {
     serverActions: {
       allowedOrigins: ['localhost:3000', 'localhost:3001']
     },
+    // Reduce bundle size
+    bundlePagesRouterDependencies: true,
+    optimizeServerReact: true,
+    // Enable gzip compression
+    gzipSize: true,
   },
   
   // Move serverComponentsExternalPackages to root level
   serverExternalPackages: ['sharp'],
-  
-  // Enable Turbopack (moved from experimental.turbo)
-  turbopack: {
-    rules: {
-      '*.svg': {
-        loaders: ['@svgr/webpack'],
-        as: '*.js',
-      },
-    },
-  },
   
   // Optimize CSS
   compiler: {
@@ -71,7 +59,7 @@ const nextConfig = {
         splitChunks: {
           chunks: 'all',
           minSize: 20000, // Increase minimum size
-          maxSize: 30000, // Smaller chunks for faster loading
+          maxSize: 50000, // Larger chunks for better caching but still reasonable
           cacheGroups: {
             default: false,
             vendors: false,
@@ -82,63 +70,36 @@ const nextConfig = {
               test: /(?<!node_modules.*)[\\/]node_modules[\\/](react|react-dom|scheduler|prop-types|use-subscription)[\\/]/,
               priority: 40,
               enforce: true,
-              maxSize: 30000,
+              maxSize: 50000,
             },
-            // Animation libraries - completely async and small
+            // Animation libraries - async loading
             animations: {
               name: 'animations',
               chunks: 'async',
               test: /[\\/]node_modules[\\/](framer-motion|lottie-react|motion-dom|lottie-web)[\\/]/,
               priority: 30,
               enforce: true,
-              maxSize: 25000,
+              maxSize: 40000,
             },
-            // UI libraries - async and small
+            // UI libraries - async and medium size
             ui: {
               name: 'ui',
               chunks: 'async',
               test: /[\\/]node_modules[\\/](lucide-react|recharts|@radix-ui)[\\/]/,
               priority: 25,
               enforce: true,
-              maxSize: 20000,
+              maxSize: 30000,
             },
-            // Firebase - separate async chunk
-            firebase: {
-              name: 'firebase',
-              chunks: 'async',
-              test: /[\\/]node_modules[\\/](firebase|@firebase)[\\/]/,
-              priority: 28,
-              enforce: true,
-              maxSize: 35000,
-            },
-            // Utilities - async and very small
-            utils: {
-              name: 'utils',
-              chunks: 'async',
-              test: /[\\/]node_modules[\\/](date-fns|clsx|class-variance-authority|tailwind-merge)[\\/]/,
-              priority: 22,
-              enforce: true,
-              maxSize: 15000,
-            },
-            // React ecosystem - separate chunk
-            reactEcosystem: {
-              name: 'react-ecosystem',
-              chunks: 'async',
-              test: /[\\/]node_modules[\\/](react-hook-form|react-hot-toast|react-query|@tanstack)[\\/]/,
-              priority: 24,
-              enforce: true,
-              maxSize: 25000,
-            },
-            // Vendor chunk - smaller pieces
+            // Vendor chunk - larger pieces for better caching
             vendor: {
               name: 'vendor',
               chunks: 'all',
               test: /[\\/]node_modules[\\/]/,
               priority: 20,
               minChunks: 1,
-              maxSize: 30000,
+              maxSize: 50000,
             },
-            // Common chunk - very small
+            // Common chunk - medium size
             common: {
               name: 'common',
               minChunks: 2,
@@ -146,7 +107,7 @@ const nextConfig = {
               priority: 10,
               reuseExistingChunk: true,
               enforce: true,
-              maxSize: 15000,
+              maxSize: 30000,
             }
           }
         },
@@ -159,6 +120,9 @@ const nextConfig = {
         minimize: true,
         // Remove unused modules
         providedExports: true,
+        // Better module ids for caching
+        moduleIds: 'deterministic',
+        chunkIds: 'deterministic',
       }
 
       // Add aggressive module replacement for smaller alternatives
