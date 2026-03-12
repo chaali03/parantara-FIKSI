@@ -5,24 +5,47 @@ import { Twitter, Linkedin, Instagram, Facebook } from "lucide-react"
 import Image from "next/image"
 import { useState } from "react"
 import { PolicyModal } from "@/components/policy-modal"
+import { AnimatedSection } from "@/components/animations/animated-section"
+import { motion } from "framer-motion"
 
 export function Footer() {
   const [isPolicyOpen, setIsPolicyOpen] = useState(false)
+  
   return (
-    <div className="relative lg:mt-32">{/* Added lg:mt-32 for desktop spacing */}
-      <div className="absolute -top-[30vw] sm:-top-[25vw] md:-top-[20vw] left-0 right-0 w-full h-[40vw] z-0 overflow-hidden">
+    <AnimatedSection animation="slideUp" className="relative lg:mt-32">
+      {/* Background Image */}
+      <motion.div 
+        initial={{ opacity: 0, scale: 1.05 }}
+        whileInView={{ opacity: 1, scale: 1 }}
+        transition={{ duration: 1, ease: "easeOut" }}
+        viewport={{ once: true }}
+        className="absolute -top-[30vw] sm:-top-[25vw] md:-top-[20vw] left-0 right-0 w-full h-[40vw] z-0 overflow-hidden"
+      >
         <Image src="/images/masjid2.webp" alt="Masjid Background" fill className="object-cover object-center" priority />
-      </div>
+      </motion.div>
 
-      <div className="absolute -top-[25vw] sm:-top-[20vw] md:-top-[15vw] left-0 right-0 flex items-end justify-center overflow-visible pointer-events-none z-10">
+      {/* Large Text Overlay */}
+      <motion.div 
+        initial={{ opacity: 0, y: 30 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.8, delay: 0.2, ease: "easeOut" }}
+        viewport={{ once: true }}
+        className="absolute -top-[25vw] sm:-top-[20vw] md:-top-[15vw] left-0 right-0 flex items-end justify-center overflow-visible pointer-events-none z-10"
+      >
         <h2 className="font-bold text-center text-[28vw] sm:text-[25vw] md:text-[22vw] lg:text-[20vw] leading-[0.85] tracking-tighter text-white whitespace-nowrap">
           MASJID
         </h2>
-      </div>
+      </motion.div>
 
       <footer id="contact" className="relative z-20 border-t border-border py-16 px-6 bg-background">
         <div className="max-w-7xl mx-auto">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+          <motion.div 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4, ease: "easeOut" }}
+            viewport={{ once: true }}
+            className="flex flex-col md:flex-row justify-between items-center gap-8"
+          >
             <div className="flex flex-col items-center md:items-start">
               <Link href="/" className="flex items-center gap-2 mb-4">
                 <div className="relative w-12 h-12">
@@ -70,31 +93,37 @@ export function Footer() {
                 <Facebook className="w-4 h-4" />
               </Link>
             </div>
-          </div>
+          </motion.div>
 
-          <div className="pt-8 mt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, delay: 0.6, ease: "easeOut" }}
+            viewport={{ once: true }}
+            className="pt-8 mt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4"
+          >
             <p className="text-xs text-muted-foreground">© 2026 DanaMasjid. Hak cipta dilindungi.</p>
             <div className="flex items-center gap-4">
-              <button
-                onClick={() => setIsPolicyOpen(true)}
+              <Link
+                href="/kebijakan-privasi"
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors underline"
               >
                 Kebijakan Privasi
-              </button>
+              </Link>
               <span className="text-xs text-muted-foreground">•</span>
-              <button
-                onClick={() => setIsPolicyOpen(true)}
+              <Link
+                href="/syarat-ketentuan"
                 className="text-xs text-muted-foreground hover:text-foreground transition-colors underline"
               >
                 Syarat & Ketentuan
-              </button>
+              </Link>
             </div>
             <p className="text-xs text-muted-foreground">DanaMasjid - Platform Donasi Masjid Terpercaya</p>
-          </div>
+          </motion.div>
         </div>
       </footer>
 
       <PolicyModal open={isPolicyOpen} onOpenChange={setIsPolicyOpen} />
-    </div>
+    </AnimatedSection>
   )
 }

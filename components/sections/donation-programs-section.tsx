@@ -3,6 +3,8 @@
 import dynamic from "next/dynamic"
 import { useState, useEffect } from "react"
 import Image from "next/image"
+import { AnimatedSection } from "@/components/animations/animated-section"
+import { motion } from "framer-motion"
 
 const Lottie = dynamic(() => import("lottie-react"), { 
   ssr: false,
@@ -10,7 +12,7 @@ const Lottie = dynamic(() => import("lottie-react"), {
 })
 
 export function DonationProgramsSection() {
-  const [animationData, setAnimationData] = useState(null)
+  const [animationData, setAnimationData] = useState<any>(null)
 
   useEffect(() => {
     // Lazy load animation data
@@ -18,52 +20,83 @@ export function DonationProgramsSection() {
       setAnimationData(data.default)
     })
   }, [])
+  
   return (
-    <section id="pricing" className="py-8 md:py-12 px-6 bg-white">
+    <AnimatedSection animation="fadeIn" className="py-8 md:py-12 px-6 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <div className="animate-fade-in">
-            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-slate-900">
-              Kenapa Memilih <span className="text-blue-600 relative inline-block">
-                DanaMasjid
-                <svg
-                  className="absolute -bottom-2 left-0 w-full"
-                  viewBox="0 0 300 12"
-                  preserveAspectRatio="none"
-                  style={{ height: '12px' }}
-                >
-                  <path
-                    d="M0,6 Q10,2 20,6 T40,6 T60,6 T80,6 T100,6 T120,6 T140,6 T160,6 T180,6 T200,6 T220,6 T240,6 T260,6 T280,6 T300,6"
-                    stroke="url(#gradient)"
-                    strokeWidth="3"
-                    fill="none"
-                    strokeLinecap="round"
-                  />
-                  <defs>
-                    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                      <stop offset="0%" stopColor="#fb923c" />
-                      <stop offset="100%" stopColor="#ea580c" />
-                    </linearGradient>
-                  </defs>
-                </svg>
-              </span>
-            </h2>
-            <p className="text-slate-600 text-lg max-w-2xl mx-auto">
-              Platform manajemen keuangan masjid terpercaya dengan transparansi penuh dan fitur lengkap
-            </p>
-          </div>
-        </div>
+        <motion.div 
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.8 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <motion.h2 
+            initial={{ opacity: 0, scale: 0.5, rotateX: -45 }}
+            whileInView={{ opacity: 1, scale: 1, rotateX: 0 }}
+            transition={{ duration: 1, delay: 0.2, type: "spring", stiffness: 200 }}
+            viewport={{ once: true }}
+            className="text-4xl md:text-5xl font-bold mb-4 text-slate-900"
+          >
+            Kenapa Memilih <span className="text-blue-600 relative inline-block">
+              DanaMasjid
+              <motion.svg
+                initial={{ pathLength: 0 }}
+                whileInView={{ pathLength: 1 }}
+                transition={{ duration: 1.5, delay: 0.8 }}
+                viewport={{ once: true }}
+                className="absolute -bottom-2 left-0 w-full"
+                viewBox="0 0 300 12"
+                preserveAspectRatio="none"
+                style={{ height: '12px' }}
+              >
+                <motion.path
+                  d="M0,6 Q10,2 20,6 T40,6 T60,6 T80,6 T100,6 T120,6 T140,6 T160,6 T180,6 T200,6 T220,6 T240,6 T260,6 T280,6 T300,6"
+                  stroke="url(#gradient)"
+                  strokeWidth="3"
+                  fill="none"
+                  strokeLinecap="round"
+                />
+                <defs>
+                  <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#fb923c" />
+                    <stop offset="100%" stopColor="#ea580c" />
+                  </linearGradient>
+                </defs>
+              </motion.svg>
+            </span>
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            viewport={{ once: true }}
+            className="text-slate-600 text-lg max-w-2xl mx-auto"
+          >
+            Platform manajemen keuangan masjid terpercaya dengan transparansi penuh dan fitur lengkap
+          </motion.p>
+        </motion.div>
 
         {/* Bento Grid */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           
           {/* Card 1: Terpercaya */}
-          <div
-            className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 animate-fade-in"
-            style={{ animationDelay: '100ms' }}
+          <motion.div
+            initial={{ opacity: 0, x: -100, rotate: -10 }}
+            whileInView={{ opacity: 1, x: 0, rotate: 0 }}
+            transition={{ duration: 0.8, delay: 0.1, type: "spring", stiffness: 100 }}
+            viewport={{ once: true }}
+            whileHover={{ scale: 1.05, rotate: 2, transition: { duration: 0.2 } }}
+            className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-2xl transition-all duration-300"
           >
             <div className="flex flex-col items-center justify-center space-y-6">
-              <div className="relative w-full h-28 md:h-32 flex items-center justify-center mb-2">
+              <motion.div 
+                initial={{ scale: 0, rotate: -180 }}
+                whileInView={{ scale: 1, rotate: 0 }}
+                transition={{ duration: 0.6, delay: 0.3, type: "spring", stiffness: 200 }}
+                viewport={{ once: true }}
+                className="relative w-full h-28 md:h-32 flex items-center justify-center mb-2"
+              >
                 <img 
                   src="/images/program/terpercaya.webp" 
                   alt="Transparansi" 
@@ -72,55 +105,108 @@ export function DonationProgramsSection() {
                   className="h-24 w-24 md:h-32 md:w-32 object-contain"
                   loading="lazy"
                 />
-              </div>
-              <h3 className="text-2xl font-bold text-slate-900 mt-2">
+              </motion.div>
+              <motion.h3 
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.5 }}
+                viewport={{ once: true }}
+                className="text-2xl font-bold text-slate-900 mt-2"
+              >
                 Transparansi
-              </h3>
-              <p className="text-slate-600 text-center text-base leading-relaxed mt-1">
+              </motion.h3>
+              <motion.p 
+                initial={{ opacity: 0 }}
+                whileInView={{ opacity: 1 }}
+                transition={{ duration: 0.5, delay: 0.7 }}
+                viewport={{ once: true }}
+                className="text-slate-600 text-center text-base leading-relaxed mt-1"
+              >
                 Platform manajemen keuangan masjid yang <span className="font-semibold text-blue-600">transparan</span> dan dipercaya ribuan masjid
-              </p>
-              <div className="flex items-center gap-1 text-sm text-slate-500 mt-2">
+              </motion.p>
+              <motion.div 
+                initial={{ opacity: 0, scale: 0 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.4, delay: 0.9, type: "spring", stiffness: 300 }}
+                viewport={{ once: true }}
+                className="flex items-center gap-1 text-sm text-slate-500 mt-2"
+              >
                 <svg className="w-4 h-4 text-green-500" fill="currentColor" viewBox="0 0 20 20">
                   <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
                 </svg>
                 <span>Terverifikasi</span>
-              </div>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Card 2: Aman & Terpercaya */}
-          <div
-            className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 animate-fade-in"
-            style={{ animationDelay: '200ms' }}
+          <motion.div
+            initial={{ opacity: 0, y: 100, scale: 0.8 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 120 }}
+            viewport={{ once: true }}
+            whileHover={{ scale: 1.05, y: -5, transition: { duration: 0.2 } }}
+            className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-2xl transition-all duration-300"
           >
             <div className="flex flex-col items-center text-center space-y-4">
-              <div className="relative w-32 h-32">
+              <motion.div 
+                initial={{ scale: 0 }}
+                whileInView={{ scale: 1 }}
+                transition={{ duration: 1, delay: 0.4, type: "spring", stiffness: 150 }}
+                viewport={{ once: true }}
+                className="relative w-32 h-32"
+              >
                 <div className="absolute inset-0 rounded-full border-2 border-dashed border-blue-200 animate-spin-slow"></div>
                 <div className="absolute inset-2 rounded-full border-2 border-blue-100"></div>
                 <div className="absolute inset-4 rounded-full border-2 border-blue-50"></div>
                 <div className="absolute inset-0 flex items-center justify-center">
-                  <svg className="w-12 h-12 text-blue-600" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <motion.svg 
+                    initial={{ scale: 0, rotate: -180 }}
+                    whileInView={{ scale: 1, rotate: 0 }}
+                    transition={{ duration: 0.8, delay: 0.6, type: "spring", stiffness: 200 }}
+                    viewport={{ once: true }}
+                    className="w-12 h-12 text-blue-600" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2"
+                  >
                     <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                  </svg>
+                  </motion.svg>
                 </div>
-              </div>
-              <div>
+              </motion.div>
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.8 }}
+                viewport={{ once: true }}
+              >
                 <h3 className="text-2xl font-bold text-slate-900 mb-2">Aman & Terpercaya</h3>
                 <p className="text-slate-600 text-base leading-relaxed">
                   Sistem keamanan berlapis dengan <span className="font-semibold">enkripsi SSL</span> dan verifikasi masjid ketat.
                 </p>
-              </div>
-              <div className="flex gap-2 mt-2">
+              </motion.div>
+              <motion.div 
+                initial={{ opacity: 0, scale: 0 }}
+                whileInView={{ opacity: 1, scale: 1 }}
+                transition={{ duration: 0.5, delay: 1, type: "spring", stiffness: 300 }}
+                viewport={{ once: true }}
+                className="flex gap-2 mt-2"
+              >
                 <span className="px-3 py-1 bg-green-50 text-green-700 text-xs font-semibold rounded-full">ISO 27001</span>
                 <span className="px-3 py-1 bg-blue-50 text-blue-700 text-xs font-semibold rounded-full">PCI DSS</span>
-              </div>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Card 3: Mudah Digunakan */}
-          <div
-            className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 animate-fade-in"
-            style={{ animationDelay: '300ms' }}
+          <motion.div
+            initial={{ opacity: 0, x: 100, rotate: 10 }}
+            whileInView={{ opacity: 1, x: 0, rotate: 0 }}
+            transition={{ duration: 0.8, delay: 0.3, type: "spring", stiffness: 100 }}
+            viewport={{ once: true }}
+            whileHover={{ scale: 1.05, rotate: -2, transition: { duration: 0.2 } }}
+            className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-2xl transition-all duration-300"
           >
             <div className="flex flex-col space-y-4">
               <div className="flex items-center justify-between text-sm">
@@ -164,12 +250,16 @@ export function DonationProgramsSection() {
                 <span className="px-3 py-1 bg-slate-100 text-slate-700 text-xs rounded-full">E-Wallet</span>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Card 4: Laporan Real-time (2 columns) */}
-          <div
-            className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 lg:col-span-2 animate-fade-in"
-            style={{ animationDelay: '400ms' }}
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8, rotateY: 15 }}
+            whileInView={{ opacity: 1, scale: 1, rotateY: 0 }}
+            transition={{ duration: 0.8, delay: 0.4, type: "spring", stiffness: 100 }}
+            viewport={{ once: true }}
+            whileHover={{ scale: 1.02, y: -3, transition: { duration: 0.2 } }}
+            className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-2xl transition-all duration-300 lg:col-span-2"
           >
             <div className="flex flex-col md:flex-row gap-8">
               <div className="flex-shrink-0">
@@ -204,30 +294,52 @@ export function DonationProgramsSection() {
                 </div>
 
                 <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 mt-4">
-                  <div className="bg-slate-50 rounded-xl p-4 lg:p-6">
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: 0.6 }}
+                    viewport={{ once: true }}
+                    className="bg-slate-50 rounded-xl p-4 lg:p-6"
+                  >
                     <div className="text-xs text-slate-500 mb-2">Total Donasi</div>
                     <div className="text-base lg:text-lg font-bold text-slate-900">Rp 2.5M</div>
                     <div className="text-xs text-green-600">↑ 12%</div>
-                  </div>
-                  <div className="bg-slate-50 rounded-xl p-4 lg:p-6">
+                  </motion.div>
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: 0.7 }}
+                    viewport={{ once: true }}
+                    className="bg-slate-50 rounded-xl p-4 lg:p-6"
+                  >
                     <div className="text-xs text-slate-500 mb-2">Donatur</div>
                     <div className="text-base lg:text-lg font-bold text-slate-900">1,234</div>
                     <div className="text-xs text-green-600">↑ 8%</div>
-                  </div>
-                  <div className="bg-slate-50 rounded-xl p-4 lg:p-6 col-span-2 lg:col-span-1">
+                  </motion.div>
+                  <motion.div 
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: 0.8 }}
+                    viewport={{ once: true }}
+                    className="bg-slate-50 rounded-xl p-4 lg:p-6 col-span-2 lg:col-span-1"
+                  >
                     <div className="text-xs text-slate-500 mb-2">Masjid</div>
                     <div className="text-base lg:text-lg font-bold text-slate-900">156</div>
                     <div className="text-xs text-green-600">↑ 5%</div>
-                  </div>
+                  </motion.div>
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Card 5: Komunitas Donatur */}
-          <div
-            className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 animate-fade-in"
-            style={{ animationDelay: '500ms' }}
+          <motion.div
+            initial={{ opacity: 0, y: 50, scale: 0.9 }}
+            whileInView={{ opacity: 1, y: 0, scale: 1 }}
+            transition={{ duration: 0.8, delay: 0.5, type: "spring", stiffness: 120 }}
+            viewport={{ once: true }}
+            whileHover={{ scale: 1.05, rotate: 1, transition: { duration: 0.2 } }}
+            className="bg-white rounded-3xl p-8 shadow-sm hover:shadow-2xl transition-all duration-300"
           >
             <div className="flex flex-col h-full space-y-4">
               <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg">
@@ -322,10 +434,10 @@ export function DonationProgramsSection() {
                 </div>
               </div>
             </div>
-          </div>
+          </motion.div>
 
         </div>
       </div>
-    </section>
+    </AnimatedSection>
   )
 }

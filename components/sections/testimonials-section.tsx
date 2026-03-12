@@ -2,6 +2,8 @@
 
 import { Star, Quote } from "lucide-react"
 import Image from "next/image"
+import { AnimatedSection } from "@/components/animations/animated-section"
+import { motion } from "framer-motion"
 
 const testimonials = [
   {
@@ -59,19 +61,35 @@ const testimonials2 = [
 
 export function TestimonialsSection() {
   return (
-    <section id="testimonials" className="py-32 px-6 bg-white">
+    <AnimatedSection animation="fadeIn" className="py-32 px-6 bg-white overflow-hidden" id="testimonials">
       <div className="max-w-7xl mx-auto">
-        <div className="text-center mb-16">
-          <h2 className="text-4xl md:text-5xl font-bold leading-tight mb-4">
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.5, rotateX: -45 }}
+          whileInView={{ opacity: 1, scale: 1, rotateX: 0 }}
+          transition={{ duration: 1, type: "spring", stiffness: 120 }}
+          viewport={{ once: true }}
+          className="text-center mb-16"
+        >
+          <motion.h2 
+            initial={{ opacity: 0, y: -30, skewX: -10 }}
+            whileInView={{ opacity: 1, y: 0, skewX: 0 }}
+            transition={{ duration: 0.8, delay: 0.2, type: "spring", stiffness: 150 }}
+            viewport={{ once: true }}
+            className="text-4xl md:text-5xl font-bold leading-tight mb-4"
+          >
             Apa Kata <span className="text-blue-600 relative inline-block">
               Mereka
-              <svg
+              <motion.svg
+                initial={{ pathLength: 0, opacity: 0 }}
+                whileInView={{ pathLength: 1, opacity: 1 }}
+                transition={{ duration: 1.5, delay: 0.5 }}
+                viewport={{ once: true }}
                 className="absolute -bottom-2 left-0 w-full"
                 viewBox="0 0 300 12"
                 preserveAspectRatio="none"
                 style={{ height: '12px' }}
               >
-                <path
+                <motion.path
                   d="M0,6 Q12,10 24,6 T48,6 T72,6 T96,6 T120,6 T144,6 T168,6 T192,6 T216,6 T240,6 T264,6 T288,6 T300,6"
                   stroke="url(#gradient-testimonial)"
                   strokeWidth="3"
@@ -84,17 +102,29 @@ export function TestimonialsSection() {
                     <stop offset="100%" stopColor="#ea580c" />
                   </linearGradient>
                 </defs>
-              </svg>
+              </motion.svg>
             </span>
-          </h2>
-          <p className="text-slate-600 text-lg max-w-2xl mx-auto">
+          </motion.h2>
+          <motion.p 
+            initial={{ opacity: 0, scale: 0.8 }}
+            whileInView={{ opacity: 1, scale: 1 }}
+            transition={{ duration: 0.6, delay: 0.4 }}
+            viewport={{ once: true }}
+            className="text-slate-600 text-lg max-w-2xl mx-auto"
+          >
             Ribuan masjid dan jamaah telah mempercayai DanaMasjid untuk transparansi keuangan masjid
-          </p>
-        </div>
+          </motion.p>
+        </motion.div>
 
         <div className="space-y-6">
           {/* Baris pertama - scroll ke kanan */}
-          <div className="relative">
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="relative"
+          >
             <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-white via-white to-transparent z-10 pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-slate-50 via-slate-50 to-transparent z-10 pointer-events-none" />
 
@@ -139,10 +169,16 @@ export function TestimonialsSection() {
                 ))}
               </div>
             </div>
-          </div>
+          </motion.div>
 
           {/* Baris kedua - scroll ke kiri */}
-          <div className="relative">
+          <motion.div 
+            initial={{ opacity: 0, x: 50 }}
+            whileInView={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.8, delay: 0.4 }}
+            viewport={{ once: true }}
+            className="relative"
+          >
             <div className="absolute left-0 top-0 bottom-0 w-32 bg-gradient-to-r from-slate-50 via-slate-50 to-transparent z-10 pointer-events-none" />
             <div className="absolute right-0 top-0 bottom-0 w-32 bg-gradient-to-l from-slate-50 via-slate-50 to-transparent z-10 pointer-events-none" />
 
@@ -187,7 +223,7 @@ export function TestimonialsSection() {
                 ))}
               </div>
             </div>
-          </div>
+          </motion.div>
         </div>
       </div>
 
@@ -218,6 +254,6 @@ export function TestimonialsSection() {
           animation: scroll-left 40s linear infinite alternate;
         }
       `}} />
-    </section>
+    </AnimatedSection>
   )
 }

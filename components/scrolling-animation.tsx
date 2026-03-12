@@ -1,11 +1,26 @@
 "use client"
 
+import { AnimatedSection } from "@/components/animations/animated-section"
+import { motion } from "framer-motion"
+
 export function HomePage() {
   return (
-    <div className="relative bg-background min-h-[120vh] md:min-h-[150vh] lg:min-h-[135vh]">
-      <div className="relative px-4 py-8 md:py-12 min-h-[120vh] md:min-h-[130vh] lg:min-h-[135vh]">
+    <AnimatedSection animation="fadeIn" className="relative bg-background min-h-[120vh] md:min-h-[150vh] lg:min-h-[135vh]">
+      <motion.div 
+        initial={{ opacity: 0 }}
+        whileInView={{ opacity: 1 }}
+        transition={{ duration: 0.4, ease: "easeOut" }}
+        viewport={{ once: true }}
+        className="relative px-4 py-8 md:py-12 min-h-[120vh] md:min-h-[130vh] lg:min-h-[135vh]"
+      >
         {/* Wavy Background - Only in this section */}
-        <div className="absolute inset-0 z-0">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.6, delay: 0.1 }}
+          viewport={{ once: true }}
+          className="absolute inset-0 z-0"
+        >
           {/* Top Wave */}
           <svg 
             className="absolute top-0 left-0 w-full h-[40vh] md:h-[50vh] lg:h-[60vh]" 
@@ -45,10 +60,16 @@ export function HomePage() {
               fill="url(#waveGradient2)"
             />
           </svg>
-        </div>
+        </motion.div>
 
         {/* TRANSPARAN - Pojok Kanan Atas */}
-        <div className="absolute top-4 left-1/2 -translate-x-1/2 lg:top-12 lg:right-16 lg:left-auto lg:translate-x-0 overflow-visible w-[85vw] sm:w-[70vw] md:w-[60vw] lg:w-[25vw] z-50">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.3 }}
+          viewport={{ once: true }}
+          className="absolute top-4 left-1/2 -translate-x-1/2 lg:top-12 lg:right-16 lg:left-auto lg:translate-x-0 overflow-visible w-[85vw] sm:w-[70vw] md:w-[60vw] lg:w-[25vw] z-50"
+        >
           <div className="relative inline-block w-full">
             {/* Frame Border */}
             <div className="absolute inset-0 border-3 sm:border-4 border-gray-200 dark:border-gray-700 rounded-2xl sm:rounded-3xl pointer-events-none z-20 shadow-lg"></div>
@@ -61,7 +82,7 @@ export function HomePage() {
               TRANSPARAN
             </span>
           </div>
-        </div>
+        </motion.div>
 
         {/* Main Content */}
         <div className="relative w-full px-4 md:px-6 lg:px-8 z-20">
@@ -111,8 +132,10 @@ export function HomePage() {
                         alt={card.title}
                         width={340}
                         height={160}
+                        sizes="(max-width: 768px) 200px, (max-width: 1024px) 250px, 340px"
                         className="w-full h-full object-contain"
                         loading="lazy"
+                        decoding="async"
                       />
                     </div>
                   </div>
@@ -163,8 +186,10 @@ export function HomePage() {
                       alt={card.title}
                       width={120}
                       height={120}
+                      sizes="(max-width: 640px) 64px, (max-width: 768px) 96px, 120px"
                       className="w-full h-full object-contain"
                       loading="lazy"
+                      decoding="async"
                     />
                   </div>
                   
@@ -185,7 +210,13 @@ export function HomePage() {
         </div>
 
         {/* JUJUR - Pojok Kiri Bawah */}
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 sm:bottom-12 lg:bottom-12 lg:left-16 lg:translate-x-0 overflow-visible w-[85vw] sm:w-[70vw] md:w-[60vw] lg:w-[25vw] z-50">
+        <motion.div 
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          transition={{ duration: 0.5, delay: 0.4 }}
+          viewport={{ once: true }}
+          className="absolute bottom-8 left-1/2 -translate-x-1/2 sm:bottom-12 lg:bottom-12 lg:left-16 lg:translate-x-0 overflow-visible w-[85vw] sm:w-[70vw] md:w-[60vw] lg:w-[25vw] z-50"
+        >
           <div className="relative inline-block w-full">
             {/* Frame Border */}
             <div className="absolute inset-0 border-3 sm:border-4 border-gray-200 dark:border-gray-700 rounded-2xl sm:rounded-3xl pointer-events-none z-20 shadow-lg"></div>
@@ -198,8 +229,8 @@ export function HomePage() {
               JUJUR
             </span>
           </div>
-        </div>
-      </div>
-    </div>
+        </motion.div>
+      </motion.div>
+    </AnimatedSection>
   )
 }

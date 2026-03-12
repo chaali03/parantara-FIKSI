@@ -12,6 +12,8 @@ interface OptimizedVideoProps {
   playsInline?: boolean
   preload?: "none" | "metadata" | "auto"
   loading?: "lazy" | "eager"
+  width?: number
+  height?: number
 }
 
 export function OptimizedVideo({
@@ -23,7 +25,9 @@ export function OptimizedVideo({
   loop = false,
   playsInline = true,
   preload = "none",
-  loading = "lazy"
+  loading = "lazy",
+  width,
+  height
 }: OptimizedVideoProps) {
   const [isLoaded, setIsLoaded] = useState(false)
   const [shouldLoad, setShouldLoad] = useState(false)
@@ -63,17 +67,23 @@ export function OptimizedVideo({
     setIsLoaded(true)
   }
 
+  // Calculate aspect ratio to prevent CLS
+  const aspectRatio = width && height ? (height / width) * 100 : undefined
+
   return (
-    <div className={`relative ${className}`}>
+    <div 
+      className={`relative ${className}`}
+      style={aspectRatio ? { paddingBottom: `${aspectRatio}%` } : undefined}
+    >
       {!isLoaded && (
-        <div className="absolute inset-0 bg-gray-100 animate-pulse flex items-center justify-center">
-          <div className="text-gray-400">Loading video...</div>
+        <div className="absolute inset-0 bg-gray-100 flex items-center justify-center">
+          <div className="w-8 h-8 border-2 border-gray-300 border-t-gray-600 rounded-full animate-spin"></div>
         </div>
       )}
       
       <video
         ref={videoRef}
-        className={`w-full h-full object-cover transition-opacity duration-300 ${
+        className={`${aspectRatio ? 'absolute inset-0' : ''} w-full h-full object-cover transition-opacity duration-300 ${
           isLoaded ? "opacity-100" : "opacity-0"
         }`}
         autoPlay={autoPlay}
@@ -83,6 +93,13 @@ export function OptimizedVideo({
         poster={poster}
         onLoadedData={handleLoadedData}
         preload={preload}
+        width={width}
+        height={height}
+        style={{
+          transform: 'translate3d(0, 0, 0)',
+          backfaceVisibility: 'hidden',
+          perspective: '1000px'
+        }}
       >
         {shouldLoad && <source src={src} type="video/mp4" />}
         Your browser does not support the video tag.
