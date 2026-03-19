@@ -10,7 +10,7 @@ import { ArrowLeft, Mail, CheckCircle2, AlertCircle, Clock } from 'lucide-react'
 import Link from 'next/link';
 import Image from 'next/image';
 import { VideoBackground } from '@/components/auth/video-background';
-import { sendPasswordResetEmail, fetchSignInMethodsForEmail } from 'firebase/auth';
+import { sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '@/lib/firebase';
 import { PolicyModal } from '@/components/policy-modal';
 
@@ -82,38 +82,17 @@ export default function ForgotPasswordPage() {
     setSuccess(false);
 
     try {
-      // Step 1: Verifikasi email terdaftar di Firebase
-      console.log('Checking if email exists:', email);
-      const signInMethods = await fetchSignInMethodsForEmail(auth, email);
-      console.log('Sign-in methods found:', signInMethods);
-      
-      if (signInMethods.length === 0) {
-        console.log('Email not registered');
-        setError('Email tidak terdaftar. Silakan daftar terlebih dahulu atau periksa kembali email Anda.');
-        setLoading(false);
-        return;
-      }
-      
-      console.log('Email verified, user exists');
-      
-      // Step 2: Kirim email reset password
-      console.log('Sending password reset email to:', email);
       await sendPasswordResetEmail(auth, email, {
         url: `${window.location.origin}/login`,
         handleCodeInApp: false,
       });
-      console.log('Password reset email sent successfully');
       
       setSuccess(true);
       setCooldown(60);
       
-      // Countdown timer
       const interval = setInterval(() => {
         setCooldown((prev) => {
-          if (prev <= 1) {
-            clearInterval(interval);
-            return 0;
-          }
+          if (prev <= 1) { clearInterval(interval); return 0; }
           return prev - 1;
         });
       }, 1000);
@@ -135,7 +114,7 @@ export default function ForgotPasswordPage() {
           setError('Koneksi internet bermasalah. Periksa koneksi Anda.');
           break;
         default:
-          setError(`Gagal mengirim email reset: ${err.message || 'Silakan coba lagi'}`);
+          setError(`Gagal mengirim email reset: ${err.code} - ${err.message || 'Silakan coba lagi'}`);
       }
     } finally {
       setLoading(false);

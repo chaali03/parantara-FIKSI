@@ -22,11 +22,11 @@ const LottiePlayer = memo(function LottiePlayer() {
       try {
         const [lottieModule, animData] = await Promise.all([
           import("lottie-react"),
-          import("@/public/lotie-loading.json")
+          fetch("/lotie-loading.json").then((r) => r.json())
         ]);
         
         setLottieComponent(() => lottieModule.default);
-        setAnimationData(animData.default);
+        setAnimationData(animData);
       } catch (error) {
         console.error('Failed to load Lottie:', error);
       }

@@ -1,7 +1,7 @@
 // Indonesia Regions API Integration
-// Using free API from https://www.emsifa.com/api-wilayah-indonesia/
+// Proxied through local API routes for caching and performance
 
-const BASE_URL = 'https://www.emsifa.com/api-wilayah-indonesia/api'
+const BASE_URL = '/api/wilayah'
 
 export interface Province {
   id: string
@@ -26,10 +26,9 @@ export interface Village {
   name: string
 }
 
-// Fetch all provinces
 export async function getProvinces(): Promise<Province[]> {
   try {
-    const response = await fetch(`${BASE_URL}/provinces.json`)
+    const response = await fetch(`${BASE_URL}/provinces`)
     if (!response.ok) throw new Error('Failed to fetch provinces')
     return await response.json()
   } catch (error) {
@@ -38,10 +37,9 @@ export async function getProvinces(): Promise<Province[]> {
   }
 }
 
-// Fetch regencies by province ID
 export async function getRegencies(provinceId: string): Promise<Regency[]> {
   try {
-    const response = await fetch(`${BASE_URL}/regencies/${provinceId}.json`)
+    const response = await fetch(`${BASE_URL}/regencies/${provinceId}`)
     if (!response.ok) throw new Error('Failed to fetch regencies')
     return await response.json()
   } catch (error) {
@@ -50,10 +48,9 @@ export async function getRegencies(provinceId: string): Promise<Regency[]> {
   }
 }
 
-// Fetch districts by regency ID
 export async function getDistricts(regencyId: string): Promise<District[]> {
   try {
-    const response = await fetch(`${BASE_URL}/districts/${regencyId}.json`)
+    const response = await fetch(`${BASE_URL}/districts/${regencyId}`)
     if (!response.ok) throw new Error('Failed to fetch districts')
     return await response.json()
   } catch (error) {
@@ -62,10 +59,9 @@ export async function getDistricts(regencyId: string): Promise<District[]> {
   }
 }
 
-// Fetch villages by district ID
 export async function getVillages(districtId: string): Promise<Village[]> {
   try {
-    const response = await fetch(`${BASE_URL}/villages/${districtId}.json`)
+    const response = await fetch(`${BASE_URL}/villages/${districtId}`)
     if (!response.ok) throw new Error('Failed to fetch villages')
     return await response.json()
   } catch (error) {

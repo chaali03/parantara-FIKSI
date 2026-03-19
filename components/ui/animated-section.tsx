@@ -149,6 +149,7 @@ interface AnimatedSectionProps {
   delay?: number
   className?: string
   once?: boolean
+  id?: string
 }
 
 const variantMap = {
@@ -169,12 +170,14 @@ export function AnimatedSection({
   variant = "fadeInUp", 
   delay = 0,
   className = "",
-  once = true
+  once = true,
+  id,
 }: AnimatedSectionProps) {
   const selectedVariant = variantMap[variant]
   
   return (
     <MotionDiv
+      id={id}
       initial="hidden"
       whileInView="visible"
       viewport={{ once, margin: "-100px" }}

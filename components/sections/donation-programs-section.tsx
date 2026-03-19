@@ -3,7 +3,6 @@
 import dynamic from "next/dynamic"
 import { useState, useEffect } from "react"
 import Image from "next/image"
-import { AnimatedSection } from "@/components/animations/animated-section"
 import { motion } from "framer-motion"
 
 const Lottie = dynamic(() => import("lottie-react"), { 
@@ -22,7 +21,7 @@ export function DonationProgramsSection() {
   }, [])
   
   return (
-    <AnimatedSection animation="fadeIn" className="py-8 md:py-12 px-6 bg-white overflow-hidden">
+    <section className="py-8 md:py-12 px-6 bg-white overflow-hidden">
       <div className="max-w-7xl mx-auto">
         <motion.div 
           initial={{ opacity: 0, y: 30 }}
@@ -438,6 +437,6 @@ export function DonationProgramsSection() {
 
         </div>
       </div>
-    </AnimatedSection>
+    </section>
   )
 }

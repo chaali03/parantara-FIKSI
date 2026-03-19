@@ -42,22 +42,20 @@ export function VideoBackground({ videoSrc, posterSrc, className = '' }: VideoBa
   useEffect(() => {
     if (!isVisible) return
 
-    // Load video on all devices with good connection
+    // Load video only on desktop with good connection
     const connection = (navigator as any).connection
-    const isGoodConnection = !connection || connection.effectiveType === '4g' || connection.effectiveType === '3g'
+    const isGoodConnection = !connection || connection.effectiveType === '4g'
+    const isDesktop = window.innerWidth >= 1024
     
-    if (isGoodConnection) {
-      // Delay video load slightly to prioritize initial render
+    if (isGoodConnection && isDesktop) {
+      // Delay video load significantly to prioritize LCP and initial render
       const timer = setTimeout(() => {
         setShouldLoadVideo(true)
-      }, 300)
+      }, 3000) // Increased delay
       return () => clearTimeout(timer)
     } else {
-      // On slow connection, still show after longer delay
-      const timer = setTimeout(() => {
-        setShouldLoadVideo(true)
-      }, 1500)
-      return () => clearTimeout(timer)
+      // On mobile or slow connection, don't load video at all
+      setHasError(true)
     }
   }, [isVisible])
 
@@ -128,7 +126,7 @@ export function VideoBackground({ videoSrc, posterSrc, className = '' }: VideoBa
             loop
             muted
             playsInline
-            preload="metadata"
+            preload="none"
             poster={posterSrc}
             className="absolute inset-0 w-full h-full object-cover"
             style={{

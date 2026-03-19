@@ -911,7 +911,7 @@ export default function RegisterPage() {
                       >
                         <input
                           type="text"
-                          placeholder="Nama Lengkap"
+                          placeholder="Nama Lengkap Sesuai Data Diri Anda"
                           value={formData.name}
                           onChange={(e) => setFormData({...formData, name: e.target.value})}
                           className="w-full pl-5 pr-12 py-4 bg-white border-2 border-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-base shadow-sm"

@@ -1,5 +1,6 @@
 // @ts-nocheck
-import { Users, Upload, CheckCircle2, User, Mail, Phone, MapPin, CreditCard } from "lucide-react"
+import { Users, User, Mail, CreditCard, CheckCircle2 } from "lucide-react"
+import { ProductionFileUpload } from "@/components/ui/production-file-upload"
 
 interface Step3Props {
   formData: any
@@ -20,6 +21,54 @@ export default function Step3PerwakilanResmi({ formData, setFormData, handleFile
         </p>
       </div>
 
+      {/* Dokumen Identitas */}
+      <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-orange-100">
+        <h3 className="text-sm sm:text-base font-semibold text-gray-900 flex items-center gap-2 mb-3 sm:mb-4">
+          <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 flex-shrink-0" />
+          <span>Dokumen Identitas</span>
+        </h3>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-2">
+              Pilih Jenis ID <span className="text-red-500">*</span>
+            </label>
+            <select
+              value={formData.jenisID}
+              onChange={(e) => setFormData({ ...formData, jenisID: e.target.value })}
+              className="w-full px-4 py-3 bg-white border-2 border-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+              required
+            >
+              <option value="KTP">KTP</option>
+              <option value="Paspor">Paspor</option>
+            </select>
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-xs text-gray-500">Foto bagian depan {formData.jenisID || 'KTP'} yang jelas</span>
+            <ProductionFileUpload
+              id="fotoKTP"
+              label={`Foto ${formData.jenisID || 'KTP'}`}
+              file={formData.fotoKTP}
+              onFileChange={(file) => handleFileChange('fotoKTP', file)}
+              required={true}
+              placeholder={`Upload foto ${formData.jenisID || 'KTP'} Anda`}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <span className="text-xs text-gray-500">Foto selfie sambil memegang {formData.jenisID || 'KTP'}</span>
+            <ProductionFileUpload
+              id="imageKTP"
+              label={`Selfie dengan ${formData.jenisID || 'KTP'}`}
+              file={formData.imageKTP}
+              onFileChange={(file) => handleFileChange('imageKTP', file)}
+              required={true}
+              placeholder={`Upload foto selfie memegang ${formData.jenisID || 'KTP'}`}
+            />
+          </div>
+        </div>
+      </div>
+
       {/* Data Pribadi Section */}
       <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-purple-100">
         <h3 className="text-sm sm:text-base font-semibold text-gray-900 flex items-center gap-2 mb-3 sm:mb-4">
@@ -28,29 +77,22 @@ export default function Step3PerwakilanResmi({ formData, setFormData, handleFile
         </h3>
         <div className="space-y-3 sm:space-y-4">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
-            <div>
+            <div className="sm:col-span-2">
               <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
-                Nama Depan <span className="text-red-500">*</span>
+                Nama Lengkap <span className="text-red-500">*</span>
               </label>
-              <input
-                type="text"
-                value={formData.namaDepan}
-                onChange={(e) => setFormData({...formData, namaDepan: e.target.value})}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base bg-white border-2 border-gray-900 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                required
-              />
-            </div>
-            <div>
-              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
-                Nama Belakang <span className="text-red-500">*</span>
-              </label>
-              <input
-                type="text"
-                value={formData.namaBelakang}
-                onChange={(e) => setFormData({...formData, namaBelakang: e.target.value})}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base bg-white border-2 border-gray-900 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                required
-              />
+              <div className="relative">
+                <input
+                  type="text"
+                  value={formData.namaLengkap ?? `${formData.namaDepan ?? ''} ${formData.namaBelakang ?? ''}`.trim()}
+                  readOnly
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 pr-28 text-sm sm:text-base bg-gray-50 border-2 border-gray-300 rounded-lg sm:rounded-xl text-gray-700 cursor-default"
+                  placeholder="Nama lengkap sesuai KTP"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
+                  <CheckCircle2 className="w-3 h-3" /> Dari akun
+                </span>
+              </div>
             </div>
           </div>
 
@@ -99,13 +141,17 @@ export default function Step3PerwakilanResmi({ formData, setFormData, handleFile
               <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
                 E-mail <span className="text-red-500">*</span>
               </label>
-              <input
-                type="email"
-                value={formData.emailPerwakilan}
-                onChange={(e) => setFormData({...formData, emailPerwakilan: e.target.value})}
-                className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base bg-white border-2 border-gray-900 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-                required
-              />
+              <div className="relative">
+                <input
+                  type="email"
+                  value={formData.emailPerwakilan}
+                  readOnly
+                  className="w-full px-3 sm:px-4 py-2.5 sm:py-3 pr-28 text-sm sm:text-base bg-gray-50 border-2 border-gray-300 rounded-lg sm:rounded-xl text-gray-700 cursor-default"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-1 text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
+                  <CheckCircle2 className="w-3 h-3" /> Dari akun
+                </span>
+              </div>
             </div>
             <div>
               <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5 sm:mb-2">
@@ -145,76 +191,6 @@ export default function Step3PerwakilanResmi({ formData, setFormData, handleFile
               className="w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base bg-white border-2 border-gray-900 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all resize-none"
               rows={3}
               placeholder="Alamat lengkap tempat tinggal"
-              required
-            />
-          </div>
-        </div>
-      </div>
-
-      {/* Identitas Section */}
-      <div className="bg-gradient-to-br from-orange-50 to-red-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-orange-100">
-        <h3 className="text-sm sm:text-base font-semibold text-gray-900 flex items-center gap-2 mb-3 sm:mb-4">
-          <CreditCard className="w-4 h-4 sm:w-5 sm:h-5 text-orange-600 flex-shrink-0" />
-          <span>Dokumen Identitas</span>
-        </h3>
-        <div className="space-y-3 sm:space-y-4">
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Pilih ID <span className="text-red-500">*</span>
-            </label>
-            <select
-              value={formData.jenisID}
-              onChange={(e) => setFormData({...formData, jenisID: e.target.value})}
-              className="w-full px-4 py-3 bg-white border-2 border-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-              required
-            >
-              <option value="KTP">KTP</option>
-              <option value="Paspor">Paspor</option>
-            </select>
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Foto {formData.jenisID} <span className="text-red-500">*</span>
-            </label>
-            <div 
-              className="border-2 border-dashed border-gray-300 rounded-xl p-6 text-center hover:border-blue-500 transition-all bg-white cursor-pointer"
-              onClick={() => document.getElementById('fotoKTP')?.click()}
-            >
-              <input
-                type="file"
-                name="fotoKTP"
-                accept="image/jpeg,image/jpg,image/png,application/pdf"
-                onChange={(e) => handleFileChange('fotoKTP', e.target.files?.[0] || null)}
-                className="hidden"
-                id="fotoKTP"
-                required
-              />
-              <div className="pointer-events-none">
-                <Upload className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                <p className="text-sm font-medium text-gray-700 mb-1">Unggah atau seret file ke sini</p>
-                <p className="text-xs text-gray-500">Format File: .jpeg, .jpg, .png, .pdf (Max 2MB)</p>
-              </div>
-            </div>
-            {formData.fotoKTP && (
-              <p className="text-sm text-green-600 mt-2 flex items-center gap-2">
-                <CheckCircle2 className="w-4 h-4" />
-                {formData.fotoKTP.name} ({(formData.fotoKTP.size / 1024).toFixed(0)} KB)
-              </p>
-            )}
-          </div>
-
-          <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-2">
-              Nomor {formData.jenisID} <span className="text-red-500">*</span>
-            </label>
-            <input
-              type="text"
-              value={formData.nomorKTP}
-              onChange={(e) => setFormData({...formData, nomorKTP: e.target.value})}
-              className="w-full px-4 py-3 bg-white border-2 border-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
-              placeholder="16 digit"
-              maxLength={16}
               required
             />
           </div>

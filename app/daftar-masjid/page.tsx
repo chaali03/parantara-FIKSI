@@ -1,7 +1,7 @@
 // @ts-nocheck
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
@@ -11,13 +11,31 @@ import {
   Shield, Lock, Eye, EyeOff
 } from "lucide-react"
 import toast, { Toaster } from 'react-hot-toast'
-import {
-  Step1DataMasjid,
-  Step2DataLegalitas,
-  Step3PerwakilanResmi,
-  Step4ReviewData,
-  Step5AkunAdmin
-} from "@/components/masjid-registration"
+import dynamic from "next/dynamic"
+import { doc, getDoc } from "firebase/firestore"
+import { db } from "@/lib/firebase"
+
+// Lazy load each step — only Step1 is needed on initial render
+const Step1DataMasjid = dynamic(
+  () => import("@/components/masjid-registration/Step1DataMasjid"),
+  { loading: () => <div className="h-64 animate-pulse bg-gray-100 rounded-xl" /> }
+)
+const Step2DataLegalitas = dynamic(
+  () => import("@/components/masjid-registration/Step2DataLegalitas"),
+  { loading: () => <div className="h-64 animate-pulse bg-gray-100 rounded-xl" /> }
+)
+const Step3PerwakilanResmi = dynamic(
+  () => import("@/components/masjid-registration/Step3PerwakilanResmi"),
+  { loading: () => <div className="h-64 animate-pulse bg-gray-100 rounded-xl" /> }
+)
+const Step4ReviewData = dynamic(
+  () => import("@/components/masjid-registration/Step4ReviewData"),
+  { loading: () => <div className="h-64 animate-pulse bg-gray-100 rounded-xl" /> }
+)
+const Step5AkunAdmin = dynamic(
+  () => import("@/components/masjid-registration/Step5AkunAdmin"),
+  { loading: () => <div className="h-64 animate-pulse bg-gray-100 rounded-xl" /> }
+)
 // TODO: Re-enable after fixing bundling issues
 // import { SessionTimer } from "@/components/masjid-registration/SessionTimer"
 import {
@@ -62,52 +80,100 @@ export default function DaftarMasjidPage() {
   const [honeypot, setHoneypot] = useState("") // Bot detection
   const [sessionInitialized, setSessionInitialized] = useState(false)
   const [formStartTime, setFormStartTime] = useState<number | null>(null)
-  const [lastActivityTime, setLastActivityTime] = useState<number>(Date.now())
+  const lastActivityTime = useRef<number>(Date.now())
+
+  // Clear any stored registration data on page load (fresh start every time)
+  useEffect(() => {
+    // Clear localStorage items related to registration
+    const keysToRemove = [
+      'daftar_masjid_data',
+      'daftar_masjid_progress', 
+      'daftar_masjid_step',
+      'registration_session',
+      'form_data_backup',
+      'masjid_registration_draft'
+    ]
+    
+    keysToRemove.forEach(key => {
+      localStorage.removeItem(key)
+    })
+    
+    // Clear sessionStorage items
+    const sessionKeysToRemove = [
+      'daftar_masjid_temp',
+      'registration_temp_data',
+      'form_progress'
+    ]
+    
+    sessionKeysToRemove.forEach(key => {
+      sessionStorage.removeItem(key)
+    })
+    
+    console.log('🧹 Registration data cleared - fresh start required')
+  }, []) // Run only once on mount
+
+  // Client-side authentication check
+  useEffect(() => {
+    // Check if user is authenticated
+    const checkAuth = () => {
+      // Check for auth token in cookies
+      const cookies = document.cookie.split(';')
+      const authToken = cookies.find(cookie => cookie.trim().startsWith('auth_token='))
+      
+      if (!authToken) {
+        // Redirect to login with message
+        const loginUrl = new URL('/login', window.location.origin)
+        loginUrl.searchParams.set('redirect', '/daftar-masjid')
+        loginUrl.searchParams.set('message', 'Harus login terlebih dahulu untuk mendaftar masjid')
+        loginUrl.searchParams.set('type', 'daftar-masjid')
+        
+        window.location.href = loginUrl.toString()
+        return
+      }
+    }
+    
+    checkAuth()
+  }, [])
 
   // Track form inactivity and session timeout
   useEffect(() => {
-    // Set start time when form is initialized
     if (!formStartTime) {
       setFormStartTime(Date.now())
     }
 
-    // Update last activity time on any user interaction
+    // Throttled activity update — avoids setState on every mousemove pixel
+    let throttleTimer: ReturnType<typeof setTimeout> | null = null
     const updateActivity = () => {
-      setLastActivityTime(Date.now())
+      if (!throttleTimer) {
+        throttleTimer = setTimeout(() => {
+          lastActivityTime.current = Date.now()
+          throttleTimer = null
+        }, 5000) // Update at most every 5 seconds
+      }
     }
 
-    // Listen to user interactions
-    window.addEventListener('mousemove', updateActivity)
-    window.addEventListener('keydown', updateActivity)
-    window.addEventListener('click', updateActivity)
-    window.addEventListener('scroll', updateActivity)
-    window.addEventListener('touchstart', updateActivity)
-    window.addEventListener('touchmove', updateActivity)
+    // Only listen to meaningful interactions, not mousemove/touchmove
+    window.addEventListener('keydown', updateActivity, { passive: true })
+    window.addEventListener('click', updateActivity, { passive: true })
+    window.addEventListener('scroll', updateActivity, { passive: true })
 
-    // Check timeouts every 30 seconds for more responsive timeout
     const timeoutCheck = setInterval(() => {
-      const now = Date.now()
-      const inactiveTime = now - lastActivityTime
-
-      // Redirect to login if inactive for 1 hour (no submit/no fill)
+      const inactiveTime = Date.now() - lastActivityTime.current
       if (inactiveTime > 60 * 60 * 1000) {
         localStorage.setItem('session_expired', 'inactive')
         localStorage.setItem('redirect_after_login', '/daftar-masjid')
         router.push('/login')
-        return
       }
-    }, 30000) // Check every 30 seconds
+    }, 60000) // Check every 60 seconds (was 30)
 
     return () => {
-      window.removeEventListener('mousemove', updateActivity)
       window.removeEventListener('keydown', updateActivity)
       window.removeEventListener('click', updateActivity)
       window.removeEventListener('scroll', updateActivity)
-      window.removeEventListener('touchstart', updateActivity)
-      window.removeEventListener('touchmove', updateActivity)
+      if (throttleTimer) clearTimeout(throttleTimer)
       clearInterval(timeoutCheck)
     }
-  }, [formStartTime, lastActivityTime, router])
+  }, [formStartTime, router])
 
   // Initialize session and device fingerprint
   useEffect(() => {
@@ -164,14 +230,45 @@ export default function DaftarMasjidPage() {
     checkAuth()
   }, [router])
 
+  // Pre-fill user data from Firestore
+  useEffect(() => {
+    const prefillUserData = async () => {
+      const userId = localStorage.getItem('userId')
+      if (!userId || !db) return
+      try {
+        const snap = await getDoc(doc(db, 'users', userId))
+        if (snap.exists()) {
+          const data = snap.data()
+          const name = data.name || data.displayName || ""
+          const email = data.email || ""
+          setFormData(prev => ({
+            ...prev,
+            namaLengkap: prev.namaLengkap || name,
+            namaDepan: prev.namaDepan || name.split(' ')[0] || "",
+            namaBelakang: prev.namaBelakang || name.split(' ').slice(1).join(' ') || "",
+            emailPerwakilan: prev.emailPerwakilan || email,
+            adminEmail: prev.adminEmail || email,
+          }))
+        }
+      } catch (e) {
+        console.error('Failed to prefill user data', e)
+      }
+    }
+    prefillUserData()
+  }, [])
+
+
   const [formData, setFormData] = useState({
     // Step 1: Data Masjid
     mosqueName: "",
+    mosqueImage: null,
     mosqueAddress: "",
     province: "",
     regency: "",
     district: "",
     village: "",
+    rt: "",
+    rw: "",
     postalCode: "",
     
     // Step 2: Data Legalitas
@@ -180,6 +277,7 @@ export default function DaftarMasjidPage() {
     npwpMasjid: "",
     
     // Step 3: Data Pengurus (Perwakilan Resmi)
+    namaLengkap: "",
     namaDepan: "",
     namaBelakang: "",
     jenisKelamin: "",
@@ -192,6 +290,7 @@ export default function DaftarMasjidPage() {
     jenisID: "KTP",
     fotoKTP: null,
     nomorKTP: "",
+    imageKTP: null,
     suratKuasa: null,
     // Kontak person sama dengan perwakilan
     kontakPersonSama: true,
@@ -235,50 +334,35 @@ export default function DaftarMasjidPage() {
 
   const handleFileChange = async (field: string, file: File | null) => {
     if (file) {
-      // Use security utility for comprehensive file validation
       const validation = validateFileUpload(file)
       
       if (!validation.valid) {
         toast.error(validation.error || "File tidak valid", {
           duration: 4000,
-          position: 'top-center',
+          position: window.innerWidth >= 768 ? 'top-right' : 'top-center',
         })
         return
       }
 
-      // Additional validation for image files (detect editing/manipulation) - NON-BLOCKING
-      if (file.type.startsWith('image/')) {
-        // Import image forensics dynamically
+      // Forensics hanya untuk foto KTP/wajah (field fotoKTP), bukan scan dokumen resmi
+      // Scan dokumen (akta, SK, surat) punya karakteristik yang selalu false-positive di ELA
+      if (field === 'fotoKTP' && file.type.startsWith('image/')) {
         const { ImageForensics } = await import('@/lib/image-forensics')
-        
-        toast.loading('Memvalidasi keaslian dokumen...', { id: 'image-validation' })
-        
+        toast.loading('Memvalidasi dokumen...', { id: 'image-validation' })
         try {
           const forensicResult = await ImageForensics.validateDocument(file)
-          
           if (!forensicResult.isValid) {
-            toast(
-              `⚠️ Peringatan: ${forensicResult.message}\n\nFile tetap dapat diupload, namun akan direview manual oleh admin.`,
-              {
-                id: 'image-validation',
-                duration: 7000,
-                position: 'top-center',
-                icon: '⚠️',
-                style: {
-                  background: '#FEF3C7',
-                  color: '#92400E',
-                  border: '1px solid #FCD34D'
-                }
-              }
-            )
-          } else {
-            toast.success('Dokumen terverifikasi sebagai asli', { 
-              id: 'image-validation', 
-              duration: 2000 
+            toast('⚠️ Foto KTP terdeteksi mungkin telah diedit. Pastikan foto asli dari kamera.', {
+              id: 'image-validation',
+              duration: 5000,
+              position: 'top-center',
+              icon: '⚠️',
+              style: { background: '#FEF3C7', color: '#92400E', border: '1px solid #FCD34D' }
             })
+          } else {
+            toast.success('Foto KTP terverifikasi', { id: 'image-validation', duration: 2000 })
           }
-        } catch (error) {
-          console.error('Error validating image:', error)
+        } catch {
           toast.dismiss('image-validation')
         }
       }
@@ -291,17 +375,29 @@ export default function DaftarMasjidPage() {
     switch (step) {
       case 1:
         if (!formData.mosqueName || !formData.mosqueAddress || !formData.province || 
-            !formData.regency || !formData.district || !formData.village || !formData.postalCode) {
+            !formData.regency || !formData.district || !formData.village) {
           toast.error("Semua field harus diisi", {
-            duration: 3000,
-            position: 'top-center',
+            duration: 4000,
+            position: window.innerWidth >= 768 ? 'top-right' : 'top-center',
           })
           return false
         }
-        if (formData.postalCode.length !== 5 || !/^\d+$/.test(formData.postalCode)) {
-          toast.error("Kode pos harus 5 digit angka", {
-            duration: 3000,
-            position: 'top-center',
+        if (!formData.mosqueImage) {
+          toast.error("Foto masjid wajib diupload", {
+            duration: 4000,
+            position: window.innerWidth >= 768 ? 'top-right' : 'top-center',
+          })
+          return false
+        }
+        
+        // Check if any administrative data contains placeholder text
+        const hasPlaceholder = [formData.province, formData.regency, formData.district, formData.village]
+          .some(field => field && field.includes('[Belum Terdeteksi]'))
+        
+        if (hasPlaceholder) {
+          toast.error("Mohon lengkapi data administratif yang belum terdeteksi di alamat lengkap", {
+            duration: 5000,
+            position: window.innerWidth >= 768 ? 'top-right' : 'top-center',
           })
           return false
         }
@@ -310,27 +406,20 @@ export default function DaftarMasjidPage() {
       case 2:
         if (!formData.aktaPendirian || !formData.skKemenkumham) {
           toast.error("Semua field legalitas harus diisi", {
-            duration: 3000,
-            position: 'top-center',
+            duration: 4000,
+            position: window.innerWidth >= 768 ? 'top-right' : 'top-center',
           })
           return false
         }
         break
         
       case 3:
-        if (!formData.namaDepan || !formData.namaBelakang || !formData.jenisKelamin || 
+        if (!formData.namaLengkap || !formData.jenisKelamin || 
             !formData.pekerjaan || !formData.emailPerwakilan || !formData.tanggalLahir ||
-            !formData.nomorHandphone || !formData.alamatTempat || !formData.nomorKTP || !formData.fotoKTP) {
+            !formData.nomorHandphone || !formData.alamatTempat || !formData.fotoKTP) {
           toast.error("Semua field perwakilan resmi harus diisi", {
-            duration: 3000,
-            position: 'top-center',
-          })
-          return false
-        }
-        if (formData.nomorKTP.length !== 16 || !/^\d+$/.test(formData.nomorKTP)) {
-          toast.error("Nomor KTP harus 16 digit angka", {
-            duration: 3000,
-            position: 'top-center',
+            duration: 4000,
+            position: window.innerWidth >= 768 ? 'top-right' : 'top-center',
           })
           return false
         }
@@ -358,10 +447,11 @@ export default function DaftarMasjidPage() {
     
     if (currentStep < totalSteps) {
       toast.success("Data tersimpan! Lanjut ke tahap berikutnya", {
-        duration: 2000,
-        position: 'top-center',
+        duration: 3000,
+        position: window.innerWidth >= 768 ? 'top-right' : 'top-center',
       })
       setTimeout(() => {
+        toast.dismiss() // Dismiss semua toast sebelum pindah step
         handleNext()
       }, 800)
       return
@@ -377,7 +467,7 @@ export default function DaftarMasjidPage() {
       if (!userId) {
         toast.error("Sesi Anda telah berakhir. Silakan login kembali.", {
           duration: 4000,
-          position: 'top-center',
+          position: window.innerWidth >= 768 ? 'top-right' : 'top-center',
         })
         router.push('/login?redirect=/daftar-masjid')
         return
@@ -411,22 +501,22 @@ export default function DaftarMasjidPage() {
         
         toast.success("Pendaftaran berhasil! Menunggu verifikasi admin...", {
           duration: 3000,
-          position: 'top-center',
+          position: window.innerWidth >= 768 ? 'top-right' : 'top-center',
         })
         setTimeout(() => {
+          toast.dismiss() // Dismiss sebelum redirect
           router.push("/masjid?message=Pendaftaran berhasil dikirim")
         }, 2000)
       } else {
         toast.error(data.error || "Gagal mendaftar", {
           duration: 4000,
-          position: 'top-center',
+          position: window.innerWidth >= 768 ? 'top-right' : 'top-center',
         })
       }
     } catch (err) {
-      console.error('Registration error:', err)
       toast.error("Terjadi kesalahan. Silakan coba lagi.", {
         duration: 4000,
-        position: 'top-center',
+        position: window.innerWidth >= 768 ? 'top-right' : 'top-center',
       })
     } finally {
       setLoading(false)
@@ -435,24 +525,22 @@ export default function DaftarMasjidPage() {
 
   const slideVariants = {
     enter: (direction: number) => ({
-      x: direction > 0 ? 300 : -300,
+      x: direction > 0 ? 100 : -100,
       opacity: 0,
     }),
     center: {
       x: 0,
       opacity: 1,
       transition: {
-        duration: 0.4,
-        type: "spring",
-        damping: 20,
-        stiffness: 200
+        duration: 0.3,
+        ease: "easeOut"
       }
     },
     exit: (direction: number) => ({
-      x: direction < 0 ? 300 : -300,
+      x: direction < 0 ? 100 : -100,
       opacity: 0,
       transition: {
-        duration: 0.3
+        duration: 0.2
       }
     })
   }
@@ -469,29 +557,22 @@ export default function DaftarMasjidPage() {
         {/* Sidebar Navigation - Desktop Only (XL and above) */}
         <div className="hidden xl:block w-64 2xl:w-72 flex-shrink-0">
           <div className="sticky top-4 lg:top-6">
-            <motion.div
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ duration: 0.5 }}
-              className="bg-white rounded-xl lg:rounded-2xl shadow-lg p-4 lg:p-6"
-            >
+            <div className="bg-white rounded-xl lg:rounded-2xl shadow-lg p-4 lg:p-6">
               <h3 className="text-base lg:text-lg font-bold text-gray-900 mb-4 lg:mb-6">Progress Pendaftaran</h3>
               
               <div className="space-y-5 lg:space-y-6 relative">
                 {/* Vertical Line - More subtle */}
                 <div className="absolute left-4 top-4 w-px bg-gray-200" style={{ height: 'calc(100% - 2rem)' }}>
-                  <motion.div 
-                    className="w-full bg-blue-600"
-                    initial={{ height: 0 }}
-                    animate={{ height: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
-                    transition={{ duration: 0.5, ease: "easeInOut" }}
+                  <div 
+                    className="w-full bg-blue-600 transition-all duration-300"
+                    style={{ height: `${((currentStep - 1) / (totalSteps - 1)) * 100}%` }}
                   />
                 </div>
 
                 {/* Step 1: Data Masjid */}
                 <div className="relative">
                   <div className="flex items-center gap-3">
-                    <motion.div 
+                    <div 
                       className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 border-2 transition-all ${
                         currentStep > 1 
                           ? 'bg-blue-600 border-blue-600 text-white' 
@@ -499,14 +580,13 @@ export default function DaftarMasjidPage() {
                           ? 'bg-blue-600 border-blue-600 text-white'
                           : 'bg-white border-gray-300 text-gray-400'
                       }`}
-                      whileHover={{ scale: 1.1 }}
                     >
                       {currentStep > 1 ? (
                         <CheckCircle2 className="w-5 h-5" />
                       ) : (
                         <span className="font-bold text-sm">1</span>
                       )}
-                    </motion.div>
+                    </div>
                     <span className={`font-semibold text-base ${
                       currentStep >= 1 ? 'text-gray-900' : 'text-gray-400'
                     }`}>
@@ -547,7 +627,7 @@ export default function DaftarMasjidPage() {
                 {/* Step 2: Legalitas */}
                 <div className="relative">
                   <div className="flex items-center gap-3">
-                    <motion.div 
+                    <div 
                       className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 border-2 transition-all ${
                         currentStep > 2 
                           ? 'bg-blue-600 border-blue-600 text-white' 
@@ -555,14 +635,13 @@ export default function DaftarMasjidPage() {
                           ? 'bg-blue-600 border-blue-600 text-white'
                           : 'bg-white border-gray-300 text-gray-400'
                       }`}
-                      whileHover={{ scale: 1.1 }}
                     >
                       {currentStep > 2 ? (
                         <CheckCircle2 className="w-5 h-5" />
                       ) : (
                         <span className="font-bold text-sm">2</span>
                       )}
-                    </motion.div>
+                    </div>
                     <span className={`font-semibold text-base ${
                       currentStep >= 2 ? 'text-gray-900' : 'text-gray-400'
                     }`}>
@@ -594,7 +673,7 @@ export default function DaftarMasjidPage() {
                 {/* Step 3: Perwakilan Resmi */}
                 <div className="relative">
                   <div className="flex items-center gap-3">
-                    <motion.div 
+                    <div 
                       className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 border-2 transition-all ${
                         currentStep > 3 
                           ? 'bg-blue-600 border-blue-600 text-white' 
@@ -602,14 +681,13 @@ export default function DaftarMasjidPage() {
                           ? 'bg-blue-600 border-blue-600 text-white'
                           : 'bg-white border-gray-300 text-gray-400'
                       }`}
-                      whileHover={{ scale: 1.1 }}
                     >
                       {currentStep > 3 ? (
                         <CheckCircle2 className="w-5 h-5" />
                       ) : (
                         <span className="font-bold text-sm">3</span>
                       )}
-                    </motion.div>
+                    </div>
                     <span className={`font-semibold text-base ${
                       currentStep >= 3 ? 'text-gray-900' : 'text-gray-400'
                     }`}>
@@ -627,25 +705,25 @@ export default function DaftarMasjidPage() {
                       >
                         <div className="flex items-center gap-2 text-blue-600 font-medium">
                           <div className="w-1.5 h-1.5 rounded-full bg-blue-600"></div>
+                          <span>Dokumen Identitas</span>
+                        </div>
+                        <div className={`flex items-center gap-2 font-medium ${formData.fotoKTP ? 'text-blue-600' : 'text-gray-400'}`}>
+                          <div className={`w-1.5 h-1.5 rounded-full ${formData.fotoKTP ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
                           <span>Data Pribadi</span>
                         </div>
-                        <div className="flex items-center gap-2 text-gray-400">
-                          <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
-                          <span>Identitas</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-400">
-                          <div className="w-1.5 h-1.5 rounded-full bg-gray-300"></div>
-                          <span>Dokumen</span>
+                        <div className={`flex items-center gap-2 font-medium ${formData.namaLengkap ? 'text-blue-600' : 'text-gray-400'}`}>
+                          <div className={`w-1.5 h-1.5 rounded-full ${formData.namaLengkap ? 'bg-blue-600' : 'bg-gray-300'}`}></div>
+                          <span>Informasi Kontak</span>
                         </div>
                       </motion.div>
                     )}
-                    {currentStep > 3 && formData.namaDepan && (
+                    {currentStep > 3 && formData.namaLengkap && (
                       <motion.div 
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}
                         className="ml-11 mt-1 text-xs text-gray-500"
                       >
-                        ✓ {formData.namaDepan} {formData.namaBelakang}
+                        ✓ {formData.namaLengkap}
                       </motion.div>
                     )}
                   </AnimatePresence>
@@ -654,7 +732,7 @@ export default function DaftarMasjidPage() {
                 {/* Step 4: Review Data */}
                 <div className="relative">
                   <div className="flex items-center gap-3">
-                    <motion.div 
+                    <div 
                       className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 border-2 transition-all ${
                         currentStep > 4 
                           ? 'bg-blue-600 border-blue-600 text-white' 
@@ -662,14 +740,13 @@ export default function DaftarMasjidPage() {
                           ? 'bg-blue-600 border-blue-600 text-white'
                           : 'bg-white border-gray-300 text-gray-400'
                       }`}
-                      whileHover={{ scale: 1.1 }}
                     >
                       {currentStep > 4 ? (
                         <CheckCircle2 className="w-5 h-5" />
                       ) : (
                         <span className="font-bold text-sm">4</span>
                       )}
-                    </motion.div>
+                    </div>
                     <span className={`font-semibold text-base ${
                       currentStep >= 4 ? 'text-gray-900' : 'text-gray-400'
                     }`}>
@@ -710,7 +787,7 @@ export default function DaftarMasjidPage() {
                 {/* Step 5: Akun Admin & 2FA */}
                 <div className="relative">
                   <div className="flex items-center gap-3">
-                    <motion.div 
+                    <div 
                       className={`w-8 h-8 rounded-full flex items-center justify-center relative z-10 border-2 transition-all ${
                         currentStep > 5 
                           ? 'bg-blue-600 border-blue-600 text-white' 
@@ -718,14 +795,13 @@ export default function DaftarMasjidPage() {
                           ? 'bg-blue-600 border-blue-600 text-white'
                           : 'bg-white border-gray-300 text-gray-400'
                       }`}
-                      whileHover={{ scale: 1.1 }}
                     >
                       {currentStep > 5 ? (
                         <CheckCircle2 className="w-5 h-5" />
                       ) : (
                         <span className="font-bold text-sm">5</span>
                       )}
-                    </motion.div>
+                    </div>
                     <span className={`font-semibold text-base ${
                       currentStep >= 5 ? 'text-gray-900' : 'text-gray-400'
                     }`}>
@@ -771,27 +847,20 @@ export default function DaftarMasjidPage() {
                   <span className="font-bold text-blue-600">{Math.round((currentStep / totalSteps) * 100)}%</span>
                 </div>
                 <div className="h-1.5 sm:h-2 bg-gray-200 rounded-full overflow-hidden">
-                  <motion.div 
-                    className="h-full bg-gradient-to-r from-blue-600 to-cyan-600"
-                    initial={{ width: 0 }}
-                    animate={{ width: `${(currentStep / totalSteps) * 100}%` }}
-                    transition={{ duration: 0.5 }}
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-600 to-cyan-600 transition-all duration-300"
+                    style={{ width: `${(currentStep / totalSteps) * 100}%` }}
                   />
                 </div>
               </div>
-            </motion.div>
+            </div>
           </div>
         </div>
 
         {/* Main Content */}
         <div className="flex-1">
           {/* Header Card */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5 }}
-            className="mb-4 sm:mb-6 md:mb-8"
-          >
+          <div className="mb-4 sm:mb-6 md:mb-8">
             <div className="bg-gradient-to-r from-blue-600 via-blue-700 to-cyan-600 rounded-lg sm:rounded-xl md:rounded-2xl lg:rounded-3xl p-3 sm:p-4 md:p-6 lg:p-8 text-white shadow-2xl">
               <div className="flex items-center gap-2 sm:gap-3 md:gap-4 mb-2 sm:mb-3 md:mb-4 lg:mb-6">
                 <div className="w-8 h-8 sm:w-10 sm:h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 bg-white/20 rounded-md sm:rounded-lg md:rounded-xl lg:rounded-2xl flex items-center justify-center backdrop-blur-sm flex-shrink-0">
@@ -812,13 +881,10 @@ export default function DaftarMasjidPage() {
                 <div className="flex items-center gap-1 sm:gap-1.5 md:gap-2">
                   {[1, 2, 3, 4, 5].map((step) => (
                     <div key={step} className="flex-1">
-                      <motion.div 
-                        className={`h-1.5 sm:h-2 md:h-2.5 rounded-full transition-all duration-500 ${
+                      <div 
+                        className={`h-1.5 sm:h-2 md:h-2.5 rounded-full transition-all duration-300 ${
                           currentStep >= step ? "bg-yellow-400 shadow-lg shadow-yellow-400/50" : "bg-white/30"
                         }`}
-                        initial={{ scaleX: 0 }}
-                        animate={{ scaleX: currentStep >= step ? 1 : 1 }}
-                        transition={{ duration: 0.5, delay: step * 0.1 }}
                       />
                     </div>
                   ))}
@@ -848,15 +914,10 @@ export default function DaftarMasjidPage() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
 
           {/* Main Form Card */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.5, delay: 0.2 }}
-            className="bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-xl overflow-hidden"
-          >
+          <div className="bg-white rounded-xl sm:rounded-2xl lg:rounded-3xl shadow-xl overflow-hidden">
             {/* Form Content */}
             <div className="p-3 sm:p-4 md:p-6 lg:p-8 xl:p-10">
               <form onSubmit={handleSubmit}>
@@ -980,7 +1041,7 @@ export default function DaftarMasjidPage() {
                 </div>
               </div>
             </div>
-          </motion.div>
+          </div>
         </div>
       </div>
     </div>

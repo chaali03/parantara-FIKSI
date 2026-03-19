@@ -27,6 +27,31 @@ export function useAuth() {
   return useContext(AuthContext)
 }
 
+// Simple client-side rate limiter: max 5 attempts per 15 minutes per email
+const loginAttempts: Record<string, { count: number; resetAt: number }> = {}
+
+function checkRateLimit(email: string): void {
+  const key = email.toLowerCase()
+  const now = Date.now()
+  const window = 15 * 60 * 1000 // 15 minutes
+
+  if (!loginAttempts[key] || now > loginAttempts[key].resetAt) {
+    loginAttempts[key] = { count: 1, resetAt: now + window }
+    return
+  }
+
+  loginAttempts[key].count++
+
+  if (loginAttempts[key].count > 5) {
+    const remaining = Math.ceil((loginAttempts[key].resetAt - now) / 60000)
+    throw new Error(`Terlalu banyak percobaan login. Coba lagi dalam ${remaining} menit.`)
+  }
+}
+
+function resetRateLimit(email: string): void {
+  delete loginAttempts[email.toLowerCase()]
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
@@ -133,97 +158,78 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signInWithEmail = async (email: string, password: string) => {
     if (!auth || !db) throw new Error('Firebase not initialized')
-    
+
+    // Check rate limit before attempting login
+    checkRateLimit(email)
+
     try {
       const result = await signInWithEmailAndPassword(auth, email, password)
       const user = result.user
-      
+
+      // Reset rate limit on successful login
+      resetRateLimit(email)
+
       // Check device fingerprint
       const currentDevice = navigator.userAgent
       const userRef = doc(db, 'users', user.uid)
       const userSnap = await getDoc(userRef)
-      
+
       if (userSnap.exists()) {
         const userData = userSnap.data()
         const lastDevice = userData.deviceFingerprint
-        const lastLogin = userData.lastLoginAt ? new Date(userData.lastLoginAt) : null
-        const now = new Date()
-        
-        // Check if force device verification flag is set (from 24hr timeout)
-        const forceVerification = localStorage.getItem(`force_device_verification_${user.uid}`)
-        
-        // Check if device changed and last login was more than 24 hours ago OR force verification
-        if ((lastDevice && lastDevice !== currentDevice && lastLogin) || forceVerification) {
-          const hoursSinceLastLogin = lastLogin ? (now.getTime() - lastLogin.getTime()) / (1000 * 60 * 60) : 25
-          
-          if (hoursSinceLastLogin > 24 || forceVerification) {
-            // Device not recognized and 24+ hours since last login OR forced verification
-            // Generate verification token
-            const verificationToken = Math.random().toString(36).substring(2) + Date.now().toString(36)
-            
-            // Save verification token to Firestore
-            await setDoc(userRef, {
-              deviceVerificationToken: verificationToken,
-              deviceVerificationExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(), // 24 hours
-              pendingDeviceFingerprint: currentDevice
-            }, { merge: true })
-            
-            // Send verification email
-            try {
-              await fetch('/api/send-device-verification', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                  email: email,
-                  userName: userData.name || 'User',
-                  deviceInfo: currentDevice,
-                  verificationToken: verificationToken
-                })
-              })
-            } catch (emailError) {
-              console.error('Failed to send verification email:', emailError)
-            }
-            
-            // Clear the force verification flag
-            localStorage.removeItem(`force_device_verification_${user.uid}`)
-            
-            // Trigger device verification
-            localStorage.setItem('device_verification_required', 'true')
-            localStorage.setItem('device_verification_email', email)
-            
-            // Sign out immediately
-            await firebaseSignOut(auth)
-            
-            // Throw error to show device verification modal
-            throw new Error('DEVICE_NOT_RECOGNIZED')
-          }
+
+        // Only trigger verification if device changed (not first login)
+        if (lastDevice && lastDevice !== currentDevice) {
+          // Generate verification token
+          const verificationToken = Math.random().toString(36).substring(2) + Date.now().toString(36)
+
+          await setDoc(userRef, {
+            deviceVerificationToken: verificationToken,
+            deviceVerificationExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+            pendingDeviceFingerprint: currentDevice,
+          }, { merge: true })
+
+          // Send verification email (fire and forget — don't block login flow on failure)
+          fetch('/api/send-device-verification', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email,
+              userName: userData.name || 'Pengguna',
+              deviceInfo: currentDevice,
+              verificationToken,
+            }),
+          }).catch(err => console.error('Failed to send verification email:', err))
+
+          // Sign out and ask user to verify
+          await firebaseSignOut(auth)
+          throw new Error('DEVICE_NOT_RECOGNIZED')
         }
       }
-      
+
       // Save userId to localStorage immediately for faster UX
       localStorage.setItem('userId', user.uid)
-      
+
       // Set auth cookie for middleware
       document.cookie = `auth_token=${user.uid}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Strict`
-      
+
       // Do Firestore operations in background (non-blocking)
       updateUserLoginData(user.uid).catch(err => {
         console.error('Background update error:', err)
       })
-      
+
       return user
     } catch (error: any) {
-      // Handle device verification error
       if (error.message === 'DEVICE_NOT_RECOGNIZED') {
-        throw new Error('Perangkat ini tidak diakui. Silakan cek surat elektronik Anda untuk memverifikasi perangkat Anda.')
+        throw new Error('Perangkat ini tidak diakui. Silakan cek email Anda untuk memverifikasi perangkat.')
       }
-      
+
       // Suppress offline errors in console
       if (error?.code === 'unavailable' || error?.message?.includes('client is offline')) {
         console.warn('Firebase offline - attempting to continue with cached data')
         return null
       }
-      
+
       console.error('Sign in error:', error)
       throw error
     }

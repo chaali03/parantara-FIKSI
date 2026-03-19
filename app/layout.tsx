@@ -3,12 +3,11 @@ import type { Metadata } from "next"
 import Script from "next/script"
 import { CookieConsentBanner } from "@/components/cookie-consent"
 import { QueryProvider, RecaptchaProvider, SecurityProvider } from "@/components/providers"
-import { AuthProvider } from "@/lib/auth-context"
 import { ScrollProgress } from "@/components/ui/scroll-progress"
 import { BackToTop } from "@/components/ui/back-to-top"
-import { PageLoadingTransition } from "@/components/ui/page-loading-transition"
 import { SuppressExtensionErrors } from "@/components/suppress-extension-errors"
 import "./globals.css"
+import { PageLoadingTransition } from "@/components/ui/page-loading-transition"
 
 export const metadata: Metadata = {
   title: "DanaMasjid - Platform Donasi Masjid Transparan & Amanah",
@@ -66,11 +65,24 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="id">
+    <html lang="id" suppressHydrationWarning>
       <head>
-        {/* DNS prefetch for external domains we actually use */}
-        <link rel="dns-prefetch" href="//fonts.googleapis.com" />
-        <link rel="dns-prefetch" href="//www.googleapis.com" />
+        {/* Viewport - required to avoid 300ms tap delay on mobile */}
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        
+        {/* Preload LCP image so browser discovers it immediately from HTML */}
+        <link
+          rel="preload"
+          href="/images/iphone.webp"
+          as="image"
+          type="image/webp"
+          fetchPriority="high"
+        />
+        
+        {/* Only preconnect to origins that will actually be used on login page */}
+        <link rel="preconnect" href="https://apis.google.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://danamasjid.firebaseapp.com" />
+        <link rel="dns-prefetch" href="https://apis.google.com" />
         
         {/* Meta Description */}
         <meta name="description" content="Platform donasi masjid yang transparan dan terpercaya. Salurkan zakat, infaq, dan sedekah Anda dengan amanah. Gratis 3 bulan pertama untuk masjid yang mendaftar." />
@@ -149,15 +161,13 @@ export default function RootLayout({
         <ScrollProgress />
         <PageLoadingTransition />
         <SecurityProvider>
-          <AuthProvider>
-            <QueryProvider>
-              <RecaptchaProvider>
-                {children}
-                <CookieConsentBanner />
-                <BackToTop />
-              </RecaptchaProvider>
-            </QueryProvider>
-          </AuthProvider>
+          <QueryProvider>
+            <RecaptchaProvider>
+              {children}
+              <CookieConsentBanner />
+              {/* <BackToTop /> - Temporarily disabled to fix hydration issues */}
+            </RecaptchaProvider>
+          </QueryProvider>
         </SecurityProvider>
       </body>
     </html>

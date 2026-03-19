@@ -123,9 +123,9 @@ export function ServicesSection() {
             <img
               src="/images/masjid1.webp"
               alt="Beautiful house"
-              width={1200}
-              height={731}
-              sizes="(max-width: 768px) 100vw, (max-width: 1024px) 960px, 1200px"
+              width={960}
+              height={639}
+              sizes="(max-width: 640px) 100vw, (max-width: 768px) 95vw, (max-width: 1024px) 960px, 1200px"
               className={`w-full h-[130%] object-cover transition-transform duration-1000 ease-out ${
                 isVisible ? "scale-100" : "scale-110"
               }`}
