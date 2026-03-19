@@ -1,19 +1,20 @@
 "use client"
 
-import { motion } from "framer-motion"
+import { motion, type Variants } from "framer-motion"
 import { useIntersectionObserver } from "@/hooks/use-intersection-observer"
 import { ReactNode } from "react"
 
 interface AnimatedSectionProps {
   children: ReactNode
   className?: string
+  id?: string
   animation?: "fadeIn" | "slideUp" | "slideLeft" | "slideRight" | "scaleIn" | "staggerChildren" | "bounceIn" | "flipIn" | "slideRotate" | "morphIn" | "elasticIn" | "waveIn"
   delay?: number
   duration?: number
   threshold?: number
 }
 
-const animationVariants = {
+const animationVariants: Record<string, Variants> = {
   fadeIn: {
     hidden: { opacity: 0 },
     visible: { opacity: 1 }
@@ -38,92 +39,66 @@ const animationVariants = {
     hidden: { opacity: 0 },
     visible: {
       opacity: 1,
-      transition: {
-        staggerChildren: 0.1
-      }
+      transition: { staggerChildren: 0.1 }
     }
   },
   bounceIn: {
     hidden: { opacity: 0, scale: 0.3, rotate: -10 },
-    visible: { 
-      opacity: 1, 
-      scale: 1, 
+    visible: {
+      opacity: 1,
+      scale: 1,
       rotate: 0,
-      transition: {
-        type: "spring",
-        stiffness: 300,
-        damping: 20
-      }
+      transition: { type: "spring" as const, stiffness: 300, damping: 20 }
     }
   },
   flipIn: {
     hidden: { opacity: 0, rotateY: -90, scale: 0.8 },
-    visible: { 
-      opacity: 1, 
-      rotateY: 0, 
+    visible: {
+      opacity: 1,
+      rotateY: 0,
       scale: 1,
-      transition: {
-        type: "spring",
-        stiffness: 200,
-        damping: 15
-      }
+      transition: { type: "spring" as const, stiffness: 200, damping: 15 }
     }
   },
   slideRotate: {
     hidden: { opacity: 0, x: -100, rotate: -15 },
-    visible: { 
-      opacity: 1, 
-      x: 0, 
+    visible: {
+      opacity: 1,
+      x: 0,
       rotate: 0,
-      transition: {
-        type: "spring",
-        stiffness: 100,
-        damping: 12
-      }
+      transition: { type: "spring" as const, stiffness: 100, damping: 12 }
     }
   },
   morphIn: {
     hidden: { opacity: 0, scale: 0.5, borderRadius: "50%" },
-    visible: { 
-      opacity: 1, 
-      scale: 1, 
+    visible: {
+      opacity: 1,
+      scale: 1,
       borderRadius: "0%",
-      transition: {
-        duration: 0.8,
-        ease: [0.25, 0.46, 0.45, 0.94]
-      }
+      transition: { duration: 0.8, ease: [0.25, 0.46, 0.45, 0.94] }
     }
   },
   elasticIn: {
     hidden: { opacity: 0, scale: 0, skewX: -15 },
-    visible: { 
-      opacity: 1, 
-      scale: 1, 
+    visible: {
+      opacity: 1,
+      scale: 1,
       skewX: 0,
-      transition: {
-        type: "spring",
-        stiffness: 400,
-        damping: 25,
-        mass: 1
-      }
+      transition: { type: "spring" as const, stiffness: 400, damping: 25, mass: 1 }
     }
   },
   waveIn: {
     hidden: { opacity: 0, y: 100, rotateX: -90 },
-    visible: { 
-      opacity: 1, 
-      y: 0, 
+    visible: {
+      opacity: 1,
+      y: 0,
       rotateX: 0,
-      transition: {
-        type: "spring",
-        stiffness: 150,
-        damping: 20
-      }
+      transition: { type: "spring" as const, stiffness: 150, damping: 20 }
     }
   }
 }
 
-const childVariants = {
+const childVariants: Variants = {
   hidden: { opacity: 0, y: 20 },
   visible: { opacity: 1, y: 0 }
 }
@@ -131,6 +106,7 @@ const childVariants = {
 export function AnimatedSection({
   children,
   className = "",
+  id,
   animation = "slideUp",
   delay = 0,
   duration = 0.6,
@@ -143,6 +119,7 @@ export function AnimatedSection({
 
   return (
     <motion.section
+      id={id}
       ref={ref}
       initial="hidden"
       animate={isIntersecting ? "visible" : "hidden"}

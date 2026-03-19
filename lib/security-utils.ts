@@ -160,9 +160,9 @@ export class RateLimiter {
  * Validate file upload security
  */
 export function validateFileUpload(file: File): { valid: boolean; error?: string } {
-  // Check file size (max 2MB)
-  if (file.size > 2 * 1024 * 1024) {
-    return { valid: false, error: 'Ukuran file maksimal 2MB' }
+  // Check file size (max 5MB — sesuai panduan di form)
+  if (file.size > 5 * 1024 * 1024) {
+    return { valid: false, error: 'Ukuran file maksimal 5MB' }
   }
   
   // Check file type

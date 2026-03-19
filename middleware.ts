@@ -127,52 +127,59 @@ export function middleware(request: NextRequest) {
   
   // Get auth token from cookies
   const authToken = request.cookies.get('auth_token')?.value
-  const sessionStart = request.cookies.get('daftar_masjid_session')?.value
   const isAuthenticated = !!authToken
   
-  // Check session timeout for daftar-masjid (1 hour)
-  if (isDaftarMasjid && isAuthenticated) {
-    if (sessionStart) {
-      const sessionStartTime = parseInt(sessionStart)
-      const now = Date.now()
-      const sessionDuration = now - sessionStartTime
-      
-      // If session is older than 1 hour (3600000 ms), redirect to login
-      if (sessionDuration > 60 * 60 * 1000) {
-        const response = NextResponse.redirect(new URL('/login', request.url))
-        // Clear the session cookie
-        response.cookies.delete('daftar_masjid_session')
-        return response
-      }
-    } else {
-      // Set session start time if not exists
-      const response = NextResponse.next()
-      response.cookies.set('daftar_masjid_session', Date.now().toString(), {
-        httpOnly: true,
-        secure: process.env.NODE_ENV === 'production',
-        sameSite: 'strict',
-        maxAge: 60 * 60, // 1 hour
-        path: '/daftar-masjid'
-      })
+  // STRICT PROTECTION FOR DAFTAR-MASJID ROUTE
+  if (isDaftarMasjid) {
+    if (!isAuthenticated) {
+      const loginUrl = new URL('/login', request.url)
+      loginUrl.searchParams.set('redirect', pathname)
+      loginUrl.searchParams.set('message', 'Harus login terlebih dahulu untuk mendaftar masjid')
+      loginUrl.searchParams.set('type', 'daftar-masjid')
+      const response = NextResponse.redirect(loginUrl)
+      response.cookies.delete('daftar_masjid_session')
+      response.cookies.delete('daftar_masjid_progress')
+      response.cookies.delete('daftar_masjid_data')
+      response.cookies.delete('daftar_masjid_started_at')
       return response
     }
+
+    const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000
+    const startedAt = request.cookies.get('daftar_masjid_started_at')?.value
+    const now = Date.now()
+
+    if (startedAt && now - parseInt(startedAt, 10) > SEVEN_DAYS_MS) {
+      // Form idle > 7 days — treat as unrecognized device, force re-login
+      const loginUrl = new URL('/login', request.url)
+      loginUrl.searchParams.set('type', 'device-unrecognized')
+      const response = NextResponse.redirect(loginUrl)
+      response.cookies.delete('daftar_masjid_started_at')
+      response.cookies.delete('daftar_masjid_session')
+      response.cookies.delete('daftar_masjid_progress')
+      response.cookies.delete('daftar_masjid_data')
+      response.cookies.delete('auth_token')
+      return response
+    }
+
+    const response = NextResponse.next()
+    if (!startedAt) {
+      // First visit — stamp the start time
+      response.cookies.set('daftar_masjid_started_at', String(now), {
+        path: '/',
+        maxAge: 8 * 24 * 60 * 60,
+        sameSite: 'strict',
+        httpOnly: true,
+      })
+    }
+    response.headers.set('X-Daftar-Masjid-Protected', 'true')
+    return response
   }
   
-  // Redirect to login if accessing protected route without auth
+  // Redirect to login if accessing other protected routes without auth
   if (isProtectedRoute && !isAuthenticated) {
     const loginUrl = new URL('/login', request.url)
     loginUrl.searchParams.set('redirect', pathname)
     loginUrl.searchParams.set('message', 'mari kita realisasikan tranparansi untuk umat')
-    return NextResponse.redirect(loginUrl)
-  }
-  
-  // Allow authenticated users to access auth routes (login/register)
-  // No auto-redirect to daftar-masjid
-  
-  // Require authentication for daftar-masjid
-  if (isDaftarMasjid && !isAuthenticated) {
-    const loginUrl = new URL('/login', request.url)
-    loginUrl.searchParams.set('redirect', pathname)
     return NextResponse.redirect(loginUrl)
   }
 

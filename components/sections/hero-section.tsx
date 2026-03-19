@@ -26,25 +26,24 @@ export function HeroSection() {
     video.style.transform = 'translateZ(0)'
     video.style.backfaceVisibility = 'hidden'
 
-    // Optimize video loading
-    video.preload = 'auto'
+    // Defer video loading - only load when in viewport
+    video.preload = 'none'
     video.playsInline = true
 
-    // Ensure video starts from beginning
-    video.currentTime = 0
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          video.preload = 'auto'
+          video.load()
+          video.play().catch(err => console.log('Video autoplay prevented:', err))
+          observer.disconnect()
+        }
+      })
+    }, { threshold: 0.1 })
 
-    // Play video immediately when loaded
-    const playVideo = () => {
-      video.play().catch(err => console.log('Video autoplay prevented:', err))
-    }
+    observer.observe(video)
 
-    if (video.readyState >= 3) {
-      playVideo()
-    } else {
-      video.addEventListener('loadeddata', playVideo, { once: true })
-    }
-
-    // Simple loop without reverse (much smoother)
+    // Simple loop
     const handleEnded = () => {
       video.currentTime = 0
       video.play()
@@ -54,6 +53,7 @@ export function HeroSection() {
 
     return () => {
       video.removeEventListener('ended', handleEnded)
+      observer.disconnect()
     }
   }, [])
 
@@ -84,9 +84,11 @@ export function HeroSection() {
   const easeOutQuad = (t: number) => t * (2 - t)
   const easeOutCubic = (t: number) => 1 - Math.pow(1 - t, 3)
 
+  // Use only composited properties (transform + opacity) to avoid layout/paint
   const scale = 1 - easeOutQuad(scrollProgress) * 0.15
   const borderRadius = easeOutCubic(scrollProgress) * 48
-  const heightVh = 100 - easeOutQuad(scrollProgress) * 37.5
+  // Replace height animation with scaleY (composited) + transform-origin top
+  const scaleY = 1 - easeOutQuad(scrollProgress) * 0.375
 
   return (
     <section ref={sectionRef} className="pt-32 pb-12 px-6 min-h-screen flex items-center relative max-w-full">
@@ -94,13 +96,14 @@ export function HeroSection() {
         <div
           className="w-full overflow-hidden relative"
           style={{
-            transform: `scale(${scale}) translate3d(0, 0, 0)`,
+            // Only transform is composited - no height/borderRadius changes
+            transform: `scale(${scale}) scaleY(${scaleY}) translate3d(0, 0, 0)`,
             borderRadius: `${borderRadius}px`,
-            height: `${heightVh}vh`,
+            height: '100vh',
+            transformOrigin: 'top center',
             backfaceVisibility: 'hidden',
             WebkitBackfaceVisibility: 'hidden',
-            perspective: 1000,
-            WebkitPerspective: 1000,
+            willChange: 'transform',
           }}
         >
           <video 
@@ -109,7 +112,7 @@ export function HeroSection() {
             loop
             muted 
             playsInline
-            preload="metadata"
+            preload="none"
             className="w-full h-full object-cover"
             style={{
               transform: 'translate3d(0, 0, 0)',
@@ -174,9 +177,7 @@ export function HeroSection() {
         <div className="flex flex-col items-center justify-center gap-8">
           <div className="relative">
             <div
-              className={`relative w-[200px] md:w-[250px] lg:w-[300px] xl:w-[350px] transition-opacity duration-1000 ease-out delay-500 ${
-                isVisible ? "opacity-100" : "opacity-0"
-              }`}
+              className={`relative w-[200px] md:w-[250px] lg:w-[300px] xl:w-[350px] transition-opacity duration-1000 ease-out delay-500 opacity-100`}
             >
               <Image 
                 src="/images/iphone.webp" 
@@ -187,8 +188,6 @@ export function HeroSection() {
                 className="w-full h-auto relative z-10"
                 priority
                 fetchPriority="high"
-                placeholder="blur"
-                blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAAIAAoDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
               />
             </div>
           </div>

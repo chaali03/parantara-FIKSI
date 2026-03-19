@@ -1,17 +1,31 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  outputFileTracingRoot: process.cwd(),
   typescript: {
     ignoreBuildErrors: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
+  
+  // Disable Fast Refresh in development if FAST_REFRESH=false
+  ...(process.env.NODE_ENV === 'development' && process.env.FAST_REFRESH === 'false' && {
+    webpack: (config, { dev, isServer }) => {
+      if (dev && !isServer) {
+        config.watchOptions = {
+          poll: 1000,
+          aggregateTimeout: 300,
+        }
+      }
+      return config
+    }
+  }),
   images: {
     unoptimized: false,
     formats: ['image/avif', 'image/webp'],
-    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    minimumCacheTTL: 31536000, // 1 year
+    minimumCacheTTL: 31536000,
     dangerouslyAllowSVG: true,
     contentDispositionType: 'attachment',
     contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
@@ -20,24 +34,29 @@ const nextConfig = {
         protocol: 'https',
         hostname: 'i.pravatar.cc',
       },
+      {
+        protocol: 'https',
+        hostname: 'images.unsplash.com',
+      },
     ],
+    loader: 'default',
+    loaderFile: undefined,
   },
   compress: true,
   poweredByHeader: false,
   
   // Enhanced compression
   experimental: {
-    optimizePackageImports: ['lucide-react', 'recharts', 'framer-motion', 'lottie-react'],
+    optimizePackageImports: ['lucide-react', 'recharts', 'framer-motion', 'lottie-react', '@radix-ui/react-dialog', '@radix-ui/react-dropdown-menu', '@radix-ui/react-popover'],
     optimizeCss: true,
-    // Optimize server components
     serverActions: {
       allowedOrigins: ['localhost:3000', 'localhost:3001']
     },
-    // Reduce bundle size
-    bundlePagesRouterDependencies: true,
     optimizeServerReact: true,
-    // Enable gzip compression
     gzipSize: true,
+    webpackBuildWorker: true,
+    parallelServerCompiles: true,
+    parallelServerBuildTraces: true,
   },
   
   // Move serverComponentsExternalPackages to root level
@@ -45,109 +64,23 @@ const nextConfig = {
   
   // Optimize CSS
   compiler: {
-    removeConsole: process.env.NODE_ENV === 'production',
-    // Enable SWC minification
+    removeConsole: process.env.NODE_ENV === 'production' ? { exclude: ['error', 'warn'] } : false,
     styledComponents: true,
   },
   
+  reactStrictMode: true,
+  
+  // Disable Fast Refresh / HMR for more stable development
+  // Note: You'll need to manually refresh browser after code changes
+  onDemandEntries: {
+    maxInactiveAge: 25 * 1000,
+    pagesBufferLength: 2,
+  },
+  
+  productionBrowserSourceMaps: false,
+  
   // Optimize webpack
   webpack: (config, { isServer, dev }) => {
-    // Optimize bundle size
-    if (!isServer && !dev) {
-      config.optimization = {
-        ...config.optimization,
-        splitChunks: {
-          chunks: 'all',
-          minSize: 20000, // Increase minimum size
-          maxSize: 50000, // Larger chunks for better caching but still reasonable
-          cacheGroups: {
-            default: false,
-            vendors: false,
-            // Framework chunk (React, Next.js) - keep small
-            framework: {
-              chunks: 'all',
-              name: 'framework',
-              test: /(?<!node_modules.*)[\\/]node_modules[\\/](react|react-dom|scheduler|prop-types|use-subscription)[\\/]/,
-              priority: 40,
-              enforce: true,
-              maxSize: 50000,
-            },
-            // Animation libraries - async loading
-            animations: {
-              name: 'animations',
-              chunks: 'async',
-              test: /[\\/]node_modules[\\/](framer-motion|lottie-react|motion-dom|lottie-web)[\\/]/,
-              priority: 30,
-              enforce: true,
-              maxSize: 40000,
-            },
-            // UI libraries - async and medium size
-            ui: {
-              name: 'ui',
-              chunks: 'async',
-              test: /[\\/]node_modules[\\/](lucide-react|recharts|@radix-ui)[\\/]/,
-              priority: 25,
-              enforce: true,
-              maxSize: 30000,
-            },
-            // Vendor chunk - larger pieces for better caching
-            vendor: {
-              name: 'vendor',
-              chunks: 'all',
-              test: /[\\/]node_modules[\\/]/,
-              priority: 20,
-              minChunks: 1,
-              maxSize: 50000,
-            },
-            // Common chunk - medium size
-            common: {
-              name: 'common',
-              minChunks: 2,
-              chunks: 'all',
-              priority: 10,
-              reuseExistingChunk: true,
-              enforce: true,
-              maxSize: 30000,
-            }
-          }
-        },
-        // Aggressive tree shaking
-        usedExports: true,
-        sideEffects: false,
-        // Module concatenation for better tree shaking
-        concatenateModules: true,
-        // Minimize bundle size
-        minimize: true,
-        // Remove unused modules
-        providedExports: true,
-        // Better module ids for caching
-        moduleIds: 'deterministic',
-        chunkIds: 'deterministic',
-      }
-
-      // Add aggressive module replacement for smaller alternatives
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        // Use smaller alternatives where possible
-        'react/jsx-runtime': 'react/jsx-runtime',
-        'react/jsx-dev-runtime': 'react/jsx-dev-runtime',
-      }
-
-      // Ignore large modules that aren't needed
-      config.externals = {
-        ...config.externals,
-        // Externalize large libraries if they're not critical
-        canvas: 'canvas',
-        bufferutil: 'bufferutil',
-        'utf-8-validate': 'utf-8-validate',
-      }
-    }
-
-    // Add module concatenation for better tree shaking
-    if (!isServer && !dev) {
-      config.optimization.concatenateModules = true;
-    }
-
     // Optimize module resolution
     config.resolve.modules = ['node_modules'];
     config.resolve.symlinks = false;

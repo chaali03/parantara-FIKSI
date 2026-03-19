@@ -1,28 +1,18 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { ArrowLeft, Shield, Eye, Lock, Users, Database, Mail } from "lucide-react"
-import Link from "next/link"
-import { SimpleHero } from "@/components/sections/simple-hero"
+import { Eye, Lock, Users, Database, Mail } from "lucide-react"
+import { Hero03 } from "@/components/sections/hero-03"
+import { Header, Footer } from "@/components/layout"
 
 export default function KebijakanPrivasiPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-yellow-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <Link 
-            href="/" 
-            className="inline-flex items-center gap-2 text-blue-600 hover:text-blue-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Kembali ke Beranda
-          </Link>
-        </div>
-      </div>
+      <Header />
 
       {/* Hero Section */}
-      <SimpleHero
+      <Hero03
+        variant="privacy"
         title={
           <>
             Kebijakan <br className="hidden md:block" />
@@ -32,13 +22,13 @@ export default function KebijakanPrivasiPage() {
         subtitle="Kami menghargai privasi Anda dan berkomitmen untuk melindungi data pribadi Anda"
       />
 
-      <div className="max-w-4xl mx-auto px-6 pb-12">
+      <div className="max-w-4xl mx-auto px-6 pb-12 pt-16">
         {/* Last Updated */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="text-sm text-gray-500 text-center mb-12"
+          className="text-sm text-gray-500 text-center mb-16"
         >
           Terakhir diperbarui: 11 Maret 2026
         </motion.p>
@@ -51,7 +41,12 @@ export default function KebijakanPrivasiPage() {
           className="bg-white rounded-2xl shadow-lg p-8 space-y-8"
         >
           {/* Pendahuluan */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
               <Eye className="w-6 h-6 text-blue-600" />
               Pendahuluan
@@ -61,10 +56,15 @@ export default function KebijakanPrivasiPage() {
               Kebijakan Privasi ini menjelaskan bagaimana kami mengumpulkan, menggunakan, dan 
               melindungi informasi yang Anda berikan saat menggunakan platform kami.
             </p>
-          </section>
+          </motion.section>
 
           {/* Informasi yang Dikumpulkan */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
               <Database className="w-6 h-6 text-blue-600" />
               Informasi yang Kami Kumpulkan
@@ -102,10 +102,15 @@ export default function KebijakanPrivasiPage() {
                 </ul>
               </div>
             </div>
-          </section>
+          </motion.section>
 
           {/* Penggunaan Informasi */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
               <Users className="w-6 h-6 text-blue-600" />
               Penggunaan Informasi
@@ -120,10 +125,15 @@ export default function KebijakanPrivasiPage() {
               <li>Menganalisis penggunaan untuk perbaikan layanan</li>
               <li>Mematuhi kewajiban hukum dan regulasi</li>
             </ul>
-          </section>
+          </motion.section>
 
           {/* Keamanan Data */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
               <Lock className="w-6 h-6 text-blue-600" />
               Keamanan Data
@@ -141,10 +151,15 @@ export default function KebijakanPrivasiPage() {
                 <li>Akses terbatas berdasarkan prinsip least privilege</li>
               </ul>
             </div>
-          </section>
+          </motion.section>
 
           {/* Berbagi Informasi */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Berbagi Informasi</h2>
             <p className="text-gray-700 mb-4">
               Kami tidak menjual, menyewakan, atau membagikan informasi pribadi Anda kepada pihak ketiga, 
@@ -156,10 +171,15 @@ export default function KebijakanPrivasiPage() {
               <li>Ketika diwajibkan oleh hukum atau otoritas yang berwenang</li>
               <li>Untuk melindungi hak, properti, atau keamanan DanaMasjid dan pengguna</li>
             </ul>
-          </section>
+          </motion.section>
 
           {/* Hak Pengguna */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Hak Anda</h2>
             <p className="text-gray-700 mb-4">Anda memiliki hak untuk:</p>
             <ul className="list-disc list-inside text-gray-700 space-y-2 ml-4">
@@ -170,10 +190,15 @@ export default function KebijakanPrivasiPage() {
               <li>Memindahkan data ke platform lain (portabilitas data)</li>
               <li>Menarik persetujuan kapan saja</li>
             </ul>
-          </section>
+          </motion.section>
 
           {/* Cookies */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Cookies dan Teknologi Pelacakan</h2>
             <p className="text-gray-700 mb-4">
               Kami menggunakan cookies dan teknologi serupa untuk:
@@ -187,20 +212,31 @@ export default function KebijakanPrivasiPage() {
             <p className="text-gray-700 mt-4">
               Anda dapat mengatur browser untuk menolak cookies, namun beberapa fitur mungkin tidak berfungsi optimal.
             </p>
-          </section>
+          </motion.section>
 
           {/* Perubahan Kebijakan */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Perubahan Kebijakan</h2>
             <p className="text-gray-700">
               Kami dapat memperbarui Kebijakan Privasi ini dari waktu ke waktu. Perubahan material 
               akan diberitahukan melalui email atau notifikasi di platform. Penggunaan berkelanjutan 
               setelah perubahan menandakan persetujuan Anda terhadap kebijakan yang diperbarui.
             </p>
-          </section>
+          </motion.section>
 
           {/* Kontak */}
-          <section className="bg-blue-50 rounded-xl p-6">
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="bg-blue-50 rounded-xl p-6"
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
               <Mail className="w-6 h-6 text-blue-600" />
               Hubungi Kami
@@ -214,9 +250,14 @@ export default function KebijakanPrivasiPage() {
               <p><strong>Telepon:</strong> +62 21 1234 5678</p>
               <p><strong>Alamat:</strong> Jl. Masjid Raya No. 123, Jakarta 12345</p>
             </div>
-          </section>
+          </motion.section>
         </motion.div>
       </div>
+
+      {/* Spacer - 128px gap */}
+      <div className="h-32"></div>
+
+      <Footer />
     </div>
   )
 }

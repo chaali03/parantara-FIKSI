@@ -1,28 +1,18 @@
 "use client"
 
 import { motion } from "framer-motion"
-import { ArrowLeft, FileText, CheckCircle, AlertTriangle, Scale, CreditCard, Users } from "lucide-react"
-import Link from "next/link"
-import { SimpleHero } from "@/components/sections/simple-hero"
+import { CheckCircle, AlertTriangle, Scale, CreditCard, Users } from "lucide-react"
+import { Hero03 } from "@/components/sections/hero-03"
+import { Header, Footer } from "@/components/layout"
 
 export default function SyaratKetentuanPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
-      {/* Header */}
-      <div className="bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-6 py-4">
-          <Link 
-            href="/" 
-            className="inline-flex items-center gap-2 text-green-600 hover:text-green-700 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Kembali ke Beranda
-          </Link>
-        </div>
-      </div>
+      <Header />
 
       {/* Hero Section */}
-      <SimpleHero
+      <Hero03
+        variant="terms"
         title={
           <>
             Syarat & <br className="hidden md:block" />
@@ -32,13 +22,13 @@ export default function SyaratKetentuanPage() {
         subtitle="Aturan dan ketentuan penggunaan platform DanaMasjid"
       />
 
-      <div className="max-w-4xl mx-auto px-6 pb-12">
+      <div className="max-w-4xl mx-auto px-6 pb-12 pt-16">
         {/* Last Updated */}
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.6, delay: 0.3 }}
-          className="text-sm text-gray-500 text-center mb-12"
+          className="text-sm text-gray-500 text-center mb-16"
         >
           Terakhir diperbarui: 11 Maret 2026
         </motion.p>
@@ -51,7 +41,12 @@ export default function SyaratKetentuanPage() {
           className="bg-white rounded-2xl shadow-lg p-8 space-y-8"
         >
           {/* Penerimaan Syarat */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
               <CheckCircle className="w-6 h-6 text-green-600" />
               Penerimaan Syarat
@@ -61,10 +56,15 @@ export default function SyaratKetentuanPage() {
               dengan Syarat & Ketentuan ini. Jika Anda tidak setuju dengan syarat-syarat ini, 
               mohon untuk tidak menggunakan layanan kami.
             </p>
-          </section>
+          </motion.section>
 
           {/* Definisi */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Definisi</h2>
             <div className="space-y-3">
               <div className="border-l-4 border-green-500 pl-4">
@@ -88,10 +88,15 @@ export default function SyaratKetentuanPage() {
                 </p>
               </div>
             </div>
-          </section>
+          </motion.section>
 
           {/* Layanan Platform */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
               <Users className="w-6 h-6 text-green-600" />
               Layanan Platform
@@ -105,10 +110,15 @@ export default function SyaratKetentuanPage() {
               <li>Dashboard analitik untuk pengurus masjid</li>
               <li>Integrasi dengan gateway pembayaran</li>
             </ul>
-          </section>
+          </motion.section>
 
           {/* Registrasi dan Akun */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Registrasi dan Akun</h2>
             <div className="space-y-4">
               <div>
@@ -131,10 +141,15 @@ export default function SyaratKetentuanPage() {
                 </ul>
               </div>
             </div>
-          </section>
+          </motion.section>
 
           {/* Donasi dan Pembayaran */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
               <CreditCard className="w-6 h-6 text-green-600" />
               Donasi dan Pembayaran
@@ -170,10 +185,15 @@ export default function SyaratKetentuanPage() {
                 </ul>
               </div>
             </div>
-          </section>
+          </motion.section>
 
           {/* Kewajiban Pengguna */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Kewajiban Pengguna</h2>
             <div className="space-y-4">
               <div>
@@ -199,10 +219,15 @@ export default function SyaratKetentuanPage() {
                 </ul>
               </div>
             </div>
-          </section>
+          </motion.section>
 
           {/* Hak Kekayaan Intelektual */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Hak Kekayaan Intelektual</h2>
             <p className="text-gray-700 mb-4">
               Semua konten, fitur, dan fungsionalitas platform DanaMasjid dilindungi oleh hak cipta, 
@@ -214,10 +239,15 @@ export default function SyaratKetentuanPage() {
               <li>Melakukan reverse engineering pada platform</li>
               <li>Membuat karya turunan dari platform kami</li>
             </ul>
-          </section>
+          </motion.section>
 
           {/* Pembatasan Tanggung Jawab */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
               <AlertTriangle className="w-6 h-6 text-yellow-600" />
               Pembatasan Tanggung Jawab
@@ -234,10 +264,15 @@ export default function SyaratKetentuanPage() {
                 <li>Penyalahgunaan dana oleh masjid</li>
               </ul>
             </div>
-          </section>
+          </motion.section>
 
           {/* Penghentian Layanan */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Penghentian Layanan</h2>
             <div className="space-y-4">
               <div>
@@ -261,10 +296,15 @@ export default function SyaratKetentuanPage() {
                 </ul>
               </div>
             </div>
-          </section>
+          </motion.section>
 
           {/* Hukum yang Berlaku */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4 flex items-center gap-3">
               <Scale className="w-6 h-6 text-green-600" />
               Hukum yang Berlaku
@@ -274,10 +314,15 @@ export default function SyaratKetentuanPage() {
               Setiap sengketa yang timbul akan diselesaikan melalui Pengadilan Negeri Jakarta Pusat 
               atau melalui mediasi jika memungkinkan.
             </p>
-          </section>
+          </motion.section>
 
           {/* Perubahan Syarat */}
-          <section>
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Perubahan Syarat & Ketentuan</h2>
             <p className="text-gray-700">
               DanaMasjid berhak mengubah Syarat & Ketentuan ini kapan saja. Perubahan akan 
@@ -285,10 +330,16 @@ export default function SyaratKetentuanPage() {
               berlaku efektif. Penggunaan berkelanjutan setelah perubahan menandakan persetujuan 
               Anda terhadap syarat yang diperbarui.
             </p>
-          </section>
+          </motion.section>
 
           {/* Kontak */}
-          <section className="bg-green-50 rounded-xl p-6">
+          <motion.section
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: "-50px" }}
+            transition={{ duration: 0.5, delay: 0.1 }}
+            className="bg-green-50 rounded-xl p-6"
+          >
             <h2 className="text-2xl font-bold text-gray-900 mb-4">Hubungi Kami</h2>
             <p className="text-gray-700 mb-4">
               Jika Anda memiliki pertanyaan tentang Syarat & Ketentuan ini, silakan hubungi kami:
@@ -299,9 +350,14 @@ export default function SyaratKetentuanPage() {
               <p><strong>Alamat:</strong> Jl. Masjid Raya No. 123, Jakarta 12345</p>
               <p><strong>Jam Operasional:</strong> Senin - Jumat, 09:00 - 17:00 WIB</p>
             </div>
-          </section>
+          </motion.section>
         </motion.div>
       </div>
+
+      {/* Spacer - 128px gap */}
+      <div className="h-32"></div>
+
+      <Footer />
     </div>
   )
 }

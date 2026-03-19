@@ -1,14 +1,16 @@
 ﻿// @ts-nocheck
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, lazy, Suspense } from "react"
 import Link from "next/link"
 import { useRouter, useSearchParams } from "next/navigation"
 import { motion, AnimatePresence } from "framer-motion"
 import Image from "next/image"
 import { useAuth } from "@/lib/auth-context"
-import { VideoBackground } from "@/components/auth/video-background"
-import { PolicyModal } from "@/components/policy-modal"
+
+// Lazy load heavy components
+const VideoBackground = lazy(() => import("@/components/auth/video-background").then(mod => ({ default: mod.VideoBackground })))
+const PolicyModal = lazy(() => import("@/components/policy-modal").then(mod => ({ default: mod.PolicyModal })))
 
 export default function LoginPage() {
   const router = useRouter()
@@ -25,6 +27,10 @@ export default function LoginPage() {
   const [isPolicyOpen, setIsPolicyOpen] = useState(false)
   const [emailError, setEmailError] = useState("")
   const [passwordError, setPasswordError] = useState("")
+  const [isDeviceBlocked, setIsDeviceBlocked] = useState(false)
+  const [verificationEmail, setVerificationEmail] = useState("")
+  const [verificationSent, setVerificationSent] = useState(false)
+  const [verificationLoading, setVerificationLoading] = useState(false)
 
   // Email validation
   const validateEmail = (value: string) => {
@@ -54,8 +60,20 @@ export default function LoginPage() {
   // Get redirect message from URL
   useEffect(() => {
     const message = searchParams.get('message')
+    const type = searchParams.get('type')
+    
+    if (type === 'device-unrecognized') {
+      setIsDeviceBlocked(true)
+      setRedirectMessage('🔒 Sesi pendaftaran Anda telah berakhir lebih dari 7 hari. Verifikasi perangkat diperlukan sebelum dapat login.')
+      return
+    }
+
     if (message) {
-      setRedirectMessage(message)
+      if (type === 'daftar-masjid') {
+        setRedirectMessage('🔐 ' + message)
+      } else {
+        setRedirectMessage(message)
+      }
     }
   }, [searchParams])
 
@@ -66,6 +84,58 @@ export default function LoginPage() {
     }, 100)
   }
 
+  const handleSendVerification = async () => {
+    if (!verificationEmail) {
+      setError("Masukkan email Anda untuk mengirim link verifikasi")
+      return
+    }
+    setVerificationLoading(true)
+    setError("")
+    try {
+      // Generate a token and save to Firestore, then send email
+      const { getFirestore, collection, query, where, getDocs, doc, setDoc } = await import('firebase/firestore')
+      const { getApp } = await import('firebase/app')
+      const firestore = getFirestore(getApp())
+      const usersRef = collection(firestore, 'users')
+      const q = query(usersRef, where('email', '==', verificationEmail.toLowerCase().trim()))
+      const snap = await getDocs(q)
+
+      if (snap.empty) {
+        setError("Email tidak ditemukan")
+        setVerificationLoading(false)
+        return
+      }
+
+      const userDoc = snap.docs[0]
+      const userData = userDoc.data()
+      const verificationToken = Math.random().toString(36).substring(2) + Date.now().toString(36)
+
+      await setDoc(doc(firestore, 'users', userDoc.id), {
+        deviceVerificationToken: verificationToken,
+        deviceVerificationExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        pendingDeviceFingerprint: navigator.userAgent,
+      }, { merge: true })
+
+      const res = await fetch('/api/send-device-verification', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: verificationEmail,
+          userName: userData.name || 'Pengguna',
+          deviceInfo: navigator.userAgent,
+          verificationToken,
+        }),
+      })
+
+      if (!res.ok) throw new Error('Gagal mengirim email')
+      setVerificationSent(true)
+    } catch (err: any) {
+      setError(err.message || "Gagal mengirim email verifikasi")
+    } finally {
+      setVerificationLoading(false)
+    }
+  }
+
   const handleGoogleSignIn = async () => {
     try {
       setLoading(true)
@@ -74,7 +144,14 @@ export default function LoginPage() {
       
       // Wait for auth state to fully update before redirect
       await new Promise(resolve => setTimeout(resolve, 1000))
-      window.location.href = '/daftar-masjid'
+      
+      // Check if there's a redirect URL
+      const redirectUrl = searchParams.get('redirect')
+      if (redirectUrl) {
+        window.location.href = redirectUrl
+      } else {
+        window.location.href = '/daftar-masjid'
+      }
     } catch (err: any) {
       setError(err.message || "Gagal login dengan Google")
     } finally {
@@ -102,11 +179,28 @@ export default function LoginPage() {
       // Show success message and redirect
       setSuccess(true)
       
-      // Wait a bit then redirect to daftar-masjid
+      // Wait a bit then redirect
       await new Promise(resolve => setTimeout(resolve, 1000))
-      window.location.href = '/daftar-masjid'
+      
+      // Check if there's a redirect URL
+      const redirectUrl = searchParams.get('redirect')
+      if (redirectUrl) {
+        window.location.href = redirectUrl
+      } else {
+        window.location.href = '/daftar-masjid'
+      }
     } catch (err: any) {
-      setError("Email atau password salah")
+      if (err.message === 'Perangkat ini tidak diakui. Silakan cek surat elektronik Anda untuk memverifikasi perangkat Anda.') {
+        setError(err.message)
+      } else if (err.code === 'auth/invalid-credential' || err.code === 'auth/wrong-password' || err.code === 'auth/user-not-found') {
+        setError("Email atau password salah")
+      } else if (err.code === 'auth/too-many-requests') {
+        setError("Terlalu banyak percobaan login. Coba lagi nanti.")
+      } else if (err.code === 'auth/network-request-failed') {
+        setError("Koneksi internet bermasalah. Silakan coba lagi.")
+      } else {
+        setError(err.message || "Email atau password salah")
+      }
       setLoading(false)
     }
   }
@@ -250,10 +344,14 @@ export default function LoginPage() {
       className="min-h-screen w-full flex items-center justify-center p-4 pb-16 sm:pb-20 md:pb-4 relative overflow-hidden bg-gradient-to-br from-blue-50 via-white to-cyan-50"
     >
       {/* Video Background */}
-      <VideoBackground 
-        videoSrc="/vidio/login.mp4"
-        posterSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%231e3a8a;stop-opacity:1' /%3E%3Cstop offset='50%25' style='stop-color:%230369a1;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%230891b2;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1920' height='1080' fill='url(%23grad)'/%3E%3C/svg%3E"
-      />
+      <Suspense fallback={
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-blue-700 to-cyan-600" />
+      }>
+        <VideoBackground 
+          videoSrc="/vidio/login.mp4"
+          posterSrc="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1920 1080'%3E%3Cdefs%3E%3ClinearGradient id='grad' x1='0%25' y1='0%25' x2='100%25' y2='100%25'%3E%3Cstop offset='0%25' style='stop-color:%231e3a8a;stop-opacity:1' /%3E%3Cstop offset='50%25' style='stop-color:%230369a1;stop-opacity:1' /%3E%3Cstop offset='100%25' style='stop-color:%230891b2;stop-opacity:1' /%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='1920' height='1080' fill='url(%23grad)'/%3E%3C/svg%3E"
+        />
+      </Suspense>
 
       {/* Main Login Card - Split Screen */}
       <motion.div
@@ -272,8 +370,11 @@ export default function LoginPage() {
               fill
               className="object-cover"
               priority
-              sizes="(max-width: 1024px) 100vw, 50vw"
-              quality={80}
+              fetchPriority="high"
+              sizes="(max-width: 1024px) 0vw, 50vw"
+              quality={75}
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
             />
           </div>
           
@@ -351,8 +452,11 @@ export default function LoginPage() {
               fill
               className="object-cover"
               priority
+              fetchPriority="high"
               sizes="(max-width: 1024px) 100vw, 0vw"
-              quality={80}
+              quality={75}
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCdABmX/9k="
             />
           </motion.div>
 
@@ -370,6 +474,60 @@ export default function LoginPage() {
             </motion.div>
 
             {/* Login Form */}
+            {isDeviceBlocked ? (
+              /* Device Verification Required UI */
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="space-y-5"
+              >
+                <div className="p-4 bg-red-50 border border-red-200 rounded-xl text-sm text-red-800 font-medium">
+                  {redirectMessage}
+                </div>
+
+                {verificationSent ? (
+                  <div className="p-4 bg-green-50 border border-green-200 rounded-xl text-sm text-green-800 text-center">
+                    ✅ Link verifikasi telah dikirim ke <strong>{verificationEmail}</strong>.<br />
+                    Silakan cek inbox atau folder spam Anda.
+                  </div>
+                ) : (
+                  <>
+                    <p className="text-gray-600 text-sm">
+                      Masukkan email akun Anda untuk menerima link verifikasi perangkat.
+                    </p>
+                    <input
+                      type="email"
+                      placeholder="Masukkan Email Anda"
+                      value={verificationEmail}
+                      onChange={(e) => setVerificationEmail(e.target.value)}
+                      className="w-full px-5 py-4 bg-white border-2 border-gray-900 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-base"
+                    />
+                    {error && (
+                      <p className="text-red-500 text-sm">{error}</p>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleSendVerification}
+                      disabled={verificationLoading}
+                      className="w-full py-4 bg-gradient-to-r from-yellow-400 to-yellow-500 text-gray-900 rounded-xl font-semibold hover:from-yellow-500 hover:to-yellow-600 transition-all shadow-md text-base disabled:opacity-50"
+                    >
+                      {verificationLoading ? 'Mengirim...' : '📧 Kirim Link Verifikasi'}
+                    </button>
+                  </>
+                )}
+
+                <p className="text-center text-sm text-gray-500">
+                  Sudah verifikasi?{' '}
+                  <button
+                    type="button"
+                    onClick={() => setIsDeviceBlocked(false)}
+                    className="text-blue-600 hover:underline font-medium"
+                  >
+                    Coba login lagi
+                  </button>
+                </p>
+              </motion.div>
+            ) : (
             <form className="space-y-5" onSubmit={handleEmailSignIn}>
               {/* Redirect Message with Animation */}
               <AnimatePresence>
@@ -378,7 +536,13 @@ export default function LoginPage() {
                     initial={{ opacity: 0, y: -10, scale: 0.95 }}
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -10, scale: 0.95 }}
-                    className="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-700 text-sm"
+                    className={`p-4 border rounded-xl text-sm font-medium ${
+                      redirectMessage.includes('🔒')
+                        ? 'bg-red-50 border-red-200 text-red-800'
+                        : redirectMessage.includes('🔐') || redirectMessage.includes('⏰')
+                        ? 'bg-amber-50 border-amber-200 text-amber-800' 
+                        : 'bg-blue-50 border-blue-200 text-blue-700'
+                    }`}
                   >
                     {redirectMessage}
                   </motion.div>
@@ -537,6 +701,7 @@ export default function LoginPage() {
                 </motion.button>
               </motion.div>
             </form>
+            )} {/* end isDeviceBlocked ternary */}
 
             {/* Divider */}
             <motion.div 
@@ -632,7 +797,9 @@ export default function LoginPage() {
         </p>
       </motion.div>
 
-      <PolicyModal open={isPolicyOpen} onOpenChange={setIsPolicyOpen} />
+      <Suspense fallback={null}>
+        <PolicyModal open={isPolicyOpen} onOpenChange={setIsPolicyOpen} />
+      </Suspense>
     </motion.div>
   )
 }

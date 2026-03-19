@@ -25,50 +25,46 @@ export class ImageForensics {
       const exifData = await this.extractEXIF(file)
       results.metadata = exifData
 
-      // Check for editing software in metadata
+      // Only flag known editing software — missing EXIF is normal for
+      // photos shared via WhatsApp, scanned docs, or screenshots
       if (exifData.Software) {
         const editingSoftware = [
-        'photoshop', 'gimp', 'paint.net', 'pixlr', 'canva', 
-        'lightroom', 'snapseed', 'vsco', 'picsart', 'photoscape'
-      ]
-      const software = exifData.Software.toLowerCase()
-      
-      if (editingSoftware.some(s => software.includes(s))) {
-        results.isAuthentic = false
-        results.confidence -= 40
-        results.reasons.push(`Terdeteksi software editing: ${exifData.Software}`)
+          'photoshop', 'gimp', 'paint.net', 'pixlr',
+          'lightroom', 'picsart', 'photoscape'
+          // Removed: canva, snapseed, vsco — these are common mobile apps
+          // used legitimately for brightness/contrast adjustments
+        ]
+        const software = exifData.Software.toLowerCase()
+        
+        if (editingSoftware.some(s => software.includes(s))) {
+          results.confidence -= 30
+          results.reasons.push(`Terdeteksi software editing: ${exifData.Software}`)
+        }
       }
-    }
+      // Removed: penalty for missing EXIF — this is extremely common for
+      // legitimate documents (WhatsApp compression strips EXIF, scan apps, screenshots)
 
-    // Check if EXIF data is stripped (suspicious)
-    if (!exifData.Make && !exifData.Model && !exifData.DateTime) {
-      results.confidence -= 20
-      results.reasons.push('Metadata EXIF hilang atau dihapus (mencurigakan)')
-    }
+      // 2. Perform Error Level Analysis (ELA) — only flag extreme cases
+      const elaResult = await this.performELA(file)
+      if (!elaResult.passed) {
+        results.confidence -= 20 // Reduced from 30 — ELA has many false positives
+        results.reasons.push(elaResult.reason)
+      }
 
-    // 2. Perform Error Level Analysis (ELA)
-    const elaResult = await this.performELA(file)
-    if (!elaResult.passed) {
-      results.isAuthentic = false
-      results.confidence -= 30
-      results.reasons.push(elaResult.reason)
-    }
+      // 3. Check for copy-paste patterns
+      const copyPasteResult = await this.detectCopyPaste(file)
+      if (!copyPasteResult.passed) {
+        results.confidence -= 20 // Reduced from 25
+        results.reasons.push(copyPasteResult.reason)
+      }
 
-    // 3. Check for copy-paste patterns
-    const copyPasteResult = await this.detectCopyPaste(file)
-    if (!copyPasteResult.passed) {
-      results.isAuthentic = false
-      results.confidence -= 25
-      results.reasons.push(copyPasteResult.reason)
-    }
+      // Raise threshold — only flag when confidence drops significantly
+      // (previously 50, now 30 to reduce false positives on legitimate docs)
+      results.isAuthentic = results.confidence >= 30
 
-    // Final decision
-    results.isAuthentic = results.confidence >= 50
-
-    return results
+      return results
     } catch (error) {
       console.error('Error analyzing image:', error)
-      // Return safe default on error
       return {
         isAuthentic: true,
         confidence: 100,
@@ -84,7 +80,6 @@ export class ImageForensics {
   private static async extractEXIF(file: File): Promise<any> {
     return new Promise(async (resolve) => {
       try {
-        // Dynamic import to avoid SSR issues
         const EXIF = (await import('exif-js')).default
         
         const reader = new FileReader()
@@ -106,7 +101,6 @@ export class ImageForensics {
                 resolve(exifData)
               })
             } catch (err) {
-              console.error('EXIF extraction error:', err)
               resolve({})
             }
           }
@@ -116,14 +110,16 @@ export class ImageForensics {
         reader.onerror = () => resolve({})
         reader.readAsDataURL(file)
       } catch (error) {
-        console.error('EXIF import error:', error)
         resolve({})
       }
     })
   }
 
   /**
-   * Error Level Analysis - detects JPEG compression inconsistencies
+   * Error Level Analysis - detects JPEG compression inconsistencies.
+   * NOTE: Many legitimate photos (especially from mobile cameras or after
+   * WhatsApp/Telegram compression) will have high variance naturally.
+   * Only flag extreme outliers.
    */
   private static async performELA(file: File): Promise<{ passed: boolean; reason: string }> {
     return new Promise((resolve) => {
@@ -145,10 +141,9 @@ export class ImageForensics {
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
           const data = imageData.data
 
-          // Analyze compression artifacts
           let highVarianceRegions = 0
           let lowVarianceRegions = 0
-          const blockSize = 8 // JPEG uses 8x8 blocks
+          const blockSize = 8
 
           for (let y = 0; y < canvas.height - blockSize; y += blockSize) {
             for (let x = 0; x < canvas.width - blockSize; x += blockSize) {
@@ -175,12 +170,15 @@ export class ImageForensics {
 
           const totalBlocks = ((canvas.height / blockSize) * (canvas.width / blockSize))
           const varianceRatio = highVarianceRegions / totalBlocks
+          const lowVarianceRatio = lowVarianceRegions / totalBlocks
 
-          // Edited images often have inconsistent compression levels
-          if (varianceRatio > 0.4 || (lowVarianceRegions / totalBlocks) > 0.5) {
+          // Raised thresholds significantly to avoid false positives:
+          // - varianceRatio > 0.75 (was 0.4) — only flag extreme cases
+          // - lowVarianceRatio > 0.85 (was 0.5) — documents naturally have large uniform areas
+          if (varianceRatio > 0.75 && lowVarianceRatio > 0.85) {
             resolve({
               passed: false,
-              reason: 'Terdeteksi inkonsistensi kompresi JPEG (tanda editing)'
+              reason: 'Terdeteksi inkonsistensi kompresi JPEG yang ekstrem'
             })
           } else {
             resolve({ passed: true, reason: '' })
@@ -195,7 +193,9 @@ export class ImageForensics {
   }
 
   /**
-   * Detect copy-paste patterns (cloning)
+   * Detect copy-paste patterns (cloning).
+   * NOTE: Official documents (KTP, surat resmi) have large white/uniform areas
+   * that naturally produce many identical blocks. Threshold must be high.
    */
   private static async detectCopyPaste(file: File): Promise<{ passed: boolean; reason: string }> {
     return new Promise((resolve) => {
@@ -217,7 +217,6 @@ export class ImageForensics {
           const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
           const data = imageData.data
 
-          // Sample random blocks and check for duplicates
           const blockSize = 16
           const samples = 100
           const blocks: string[] = []
@@ -242,11 +241,12 @@ export class ImageForensics {
             }
           }
 
-          // Too many duplicate blocks suggests cloning/copy-paste
-          if (duplicates > samples * 0.15) {
+          // Raised threshold from 15% to 50% — documents with white backgrounds
+          // (KTP, official letters) will naturally have many identical blank blocks
+          if (duplicates > samples * 0.5) {
             resolve({
               passed: false,
-              reason: 'Terdeteksi pola duplikasi (copy-paste/cloning)'
+              reason: 'Terdeteksi pola duplikasi yang tidak wajar (copy-paste/cloning)'
             })
           } else {
             resolve({ passed: true, reason: '' })
@@ -279,3 +279,4 @@ export class ImageForensics {
     }
   }
 }
+

@@ -3,11 +3,30 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/* Font optimization */
+@font-face {
+  font-family: system-ui;
+  font-display: swap;
+}
+
+/* Performance optimizations */
+* {
+  box-sizing: border-box;
+}
+
+/* Optimize for hardware acceleration */
+.motion-safe\:transform {
+  transform: translateZ(0);
+  will-change: transform;
+}
+
 /* Critical CSS - Above the fold - Inlined for faster rendering */
 html {
   scroll-behavior: auto;
   overflow-x: hidden;
   overflow-y: scroll;
+  scrollbar-width: thin;
+  scrollbar-color: #fbbf24 #fef3c7;
 }
 
 body {
@@ -33,21 +52,6 @@ main {
   overflow: visible;
 }
 
-/* Critical layout classes - inline for immediate use */
-.min-h-screen { min-height: 100vh; }
-.bg-white { background-color: white; }
-.flex { display: flex; }
-.items-center { align-items: center; }
-.justify-center { justify-content: center; }
-.w-full { width: 100%; }
-.relative { position: relative; }
-.absolute { position: absolute; }
-.inset-0 { top: 0; right: 0; bottom: 0; left: 0; }
-.object-cover { object-fit: cover; }
-.text-center { text-align: center; }
-.mx-auto { margin-left: auto; margin-right: auto; }
-.max-w-7xl { max-width: 80rem; }
-
 /* Loading spinner styles - critical */
 .loading-spinner {
   width: 2rem;
@@ -69,8 +73,7 @@ main {
 }
 
 /* Custom scrollbar styling - only on html */
-@media (min-width: 768px) {
-  html::-webkit-scrollbar {
+@media (min-width: 768px) {  html::-webkit-scrollbar {
     width: 6px;
   }
 
@@ -98,29 +101,14 @@ main {
   }
 }
 
-/* Firefox Scrollbar */
-html {
-  scrollbar-width: thin;
-  scrollbar-color: #fbbf24 #fef3c7;
-}
+/* Firefox Scrollbar - consolidated into html block above */
 
 /* Video optimization for smooth playback */
 video {
-  -webkit-transform: translate3d(0, 0, 0);
   transform: translate3d(0, 0, 0);
-  -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
-  -webkit-perspective: 1000px;
   perspective: 1000px;
   will-change: transform;
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-}
-
-/* Optimize animations */
-* {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
 }
 
 :root {
@@ -268,36 +256,7 @@ video {
   pointer-events: none !important;
 }
 
-/* Video performance optimization */
-video {
-  -webkit-transform: translateZ(0);
-  -webkit-backface-visibility: hidden;
-  -webkit-perspective: 1000;
-  transform: translateZ(0);
-  backface-visibility: hidden;
-  perspective: 1000;
-}
-
-/* Smooth scroll performance */
-* {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-}
-
 /* Image optimization */
-img {
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-  image-rendering: optimize-contrast;
-}
-
-/* Optimize for better compression */
-.webp-optimized {
-  image-rendering: -webkit-optimize-contrast;
-  image-rendering: crisp-edges;
-}
-
-/* Prevent layout shifts for images */
 img[width][height] {
   height: auto;
 }

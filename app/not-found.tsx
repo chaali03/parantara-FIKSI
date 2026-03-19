@@ -3,26 +3,25 @@
 import { useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import lottie from 'lottie-web'
 
 export default function NotFound() {
   const router = useRouter()
   const animationContainer = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
-    if (animationContainer.current) {
-      const animation = lottie.loadAnimation({
-        container: animationContainer.current,
+    if (!animationContainer.current) return
+
+    // Dynamic import — keeps lottie-web out of the main bundle
+    import('lottie-web').then((lottie) => {
+      const animation = lottie.default.loadAnimation({
+        container: animationContainer.current!,
         renderer: 'svg',
         loop: true,
         autoplay: true,
         path: '/lotie/Lonely 404.json'
       })
-
-      return () => {
-        animation.destroy()
-      }
-    }
+      return () => animation.destroy()
+    })
   }, [])
 
   return (

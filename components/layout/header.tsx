@@ -2,10 +2,41 @@
 
 import type React from "react"
 import { useState } from "react"
-import { Menu, X, ArrowUpRight, ArrowRight, ChevronDown } from "lucide-react"
 import Image from "next/image"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
+import { triggerPageLoading } from "@/lib/page-loading"
+
+declare global {
+  interface Window { __scrollTarget?: string }
+}
+
+// Inline SVGs to avoid lucide hydration mismatch
+const IconMenu = () => (
+  <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <line x1="4" x2="20" y1="6" y2="6" /><line x1="4" x2="20" y1="12" y2="12" /><line x1="4" x2="20" y1="18" y2="18" />
+  </svg>
+)
+const IconX = () => (
+  <svg width={24} height={24} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M18 6 6 18" /><path d="m6 6 12 12" />
+  </svg>
+)
+const IconChevronDown = ({ className }: { className?: string }) => (
+  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+    <path d="m6 9 6 6 6-6" />
+  </svg>
+)
+const IconArrowRight = ({ className }: { className?: string }) => (
+  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+    <path d="M5 12h14" /><path d="m12 5 7 7-7 7" />
+  </svg>
+)
+const IconArrowUpRight = ({ className }: { className?: string }) => (
+  <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className={className} aria-hidden="true">
+    <path d="M7 7h10v10" /><path d="M7 17 17 7" />
+  </svg>
+)
 
 export function Header() {
   const [isOpen, setIsOpen] = useState(false)
@@ -14,26 +45,32 @@ export function Header() {
   const isScrolled = true
   const router = useRouter()
 
+  const scrollToId = (targetId: string) => {
+    let attempts = 0
+    const tryScroll = () => {
+      const element = document.getElementById(targetId)
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" })
+      } else if (attempts++ < 40) {
+        setTimeout(tryScroll, 150)
+      }
+    }
+    tryScroll()
+  }
+
   const handleSmoothScroll = (e: React.MouseEvent<HTMLAnchorElement>, targetId: string) => {
     e.preventDefault()
     
     // Check if we're on homepage
     if (window.location.pathname === '/') {
-      const element = document.getElementById(targetId)
-      if (element) {
-        const headerOffset = 100
-        const elementPosition = element.getBoundingClientRect().top + window.scrollY
-        const offsetPosition = elementPosition - headerOffset
-
-        window.scrollTo({
-          top: offsetPosition,
-          behavior: "smooth",
-        })
-        setIsOpen(false)
-      }
+      scrollToId(targetId)
+      setIsOpen(false)
     } else {
       // If not on homepage, navigate to homepage with hash
-      router.push(`/#${targetId}`)
+      // Store target so page.tsx can scroll after load
+      window.__scrollTarget = targetId
+      triggerPageLoading()
+      router.push(`/`)
       setIsOpen(false)
     }
   }
@@ -49,6 +86,7 @@ export function Header() {
       })
     } else {
       // Navigate to homepage
+      triggerPageLoading()
       router.push('/')
     }
   }
@@ -80,6 +118,7 @@ export function Header() {
                 sizes="48px"
                 className="object-contain"
                 priority
+                suppressHydrationWarning
               />
             </div>
           </a>
@@ -104,8 +143,8 @@ export function Header() {
               Fitur
             </a>
             <a
-              href="#pricing"
-              onClick={(e) => handleSmoothScroll(e, "pricing")}
+              href="#program"
+              onClick={(e) => handleSmoothScroll(e, "program")}
               className={`text-sm transition-colors cursor-pointer ${
                 isScrolled ? "text-zinc-600 hover:text-black" : "text-muted-foreground hover:text-foreground"
               }`}
@@ -189,7 +228,7 @@ export function Header() {
                   isScrolled ? "bg-black" : "bg-foreground"
                 }`} />
                 <span className="relative z-10 group-hover:text-white transition-colors duration-300">Masuk</span>
-                <ChevronDown className={`w-4 h-4 relative z-10 transition-all duration-300 ${
+                <IconChevronDown className={`w-4 h-4 relative z-10 transition-all duration-300 ${
                   isDropdownOpen ? "rotate-180" : ""
                 } group-hover:text-white`} />
               </button>
@@ -206,6 +245,7 @@ export function Header() {
                     }`}
                     onClick={() => {
                       setIsDropdownOpen(false)
+                      triggerPageLoading()
                       router.push("/login")
                     }}
                   >
@@ -219,6 +259,7 @@ export function Header() {
                     }`}
                     onClick={() => {
                       setIsDropdownOpen(false)
+                      triggerPageLoading()
                       router.push("/register")
                     }}
                   >
@@ -232,6 +273,7 @@ export function Header() {
                     }`}
                     onClick={() => {
                       setIsDropdownOpen(false)
+                      triggerPageLoading()
                       router.push("/masjid")
                     }}
                   >
@@ -260,12 +302,12 @@ export function Header() {
                 Donasi Sekarang
               </span>
               <span className="w-8 h-8 rounded-full flex items-center justify-center relative z-10">
-                <ArrowRight
+                <IconArrowRight
                   className={`w-4 h-4 group-hover:opacity-0 absolute transition-opacity duration-300 ${
                     isScrolled ? "text-black" : "text-foreground"
                   }`}
                 />
-                <ArrowUpRight
+                <IconArrowUpRight
                   className={`w-4 h-4 opacity-0 group-hover:opacity-100 transition-all duration-300 ${
                     isScrolled ? "text-black group-hover:text-white" : "text-foreground group-hover:text-background"
                   }`}
@@ -279,8 +321,9 @@ export function Header() {
             onClick={() => setIsOpen(!isOpen)}
             aria-label={isOpen ? "Tutup menu" : "Buka menu"}
             aria-expanded={isOpen}
+            suppressHydrationWarning
           >
-            {isOpen ? <X size={24} /> : <Menu size={24} />}
+            {isOpen ? <IconX /> : <IconMenu />}
           </button>
         </div>
 
@@ -309,8 +352,8 @@ export function Header() {
               Fitur
             </a>
             <a
-              href="#pricing"
-              onClick={(e) => handleSmoothScroll(e, "pricing")}
+              href="#program"
+              onClick={(e) => handleSmoothScroll(e, "program")}
               className={`transition-colors cursor-pointer ${
                 isScrolled ? "text-zinc-600 hover:text-black" : "text-muted-foreground hover:text-foreground"
               }`}
@@ -395,7 +438,7 @@ export function Header() {
                     isScrolled ? "bg-black" : "bg-foreground"
                   }`} />
                   <span className="relative z-10 group-hover:text-white transition-colors duration-300">Masuk</span>
-                  <ChevronDown className={`w-4 h-4 relative z-10 transition-all duration-300 ${
+                  <IconChevronDown className={`w-4 h-4 relative z-10 transition-all duration-300 ${
                     isMobileDropdownOpen ? "rotate-180" : ""
                   } group-hover:text-white`} />
                 </button>
@@ -413,6 +456,7 @@ export function Header() {
                       onClick={() => {
                         setIsMobileDropdownOpen(false)
                         setIsOpen(false)
+                        triggerPageLoading()
                         router.push("/login")
                       }}
                     >
@@ -427,6 +471,7 @@ export function Header() {
                       onClick={() => {
                         setIsMobileDropdownOpen(false)
                         setIsOpen(false)
+                        triggerPageLoading()
                         router.push("/register")
                       }}
                     >
@@ -441,6 +486,7 @@ export function Header() {
                       onClick={() => {
                         setIsMobileDropdownOpen(false)
                         setIsOpen(false)
+                        triggerPageLoading()
                         router.push("/masjid")
                       }}
                     >
@@ -468,12 +514,12 @@ export function Header() {
                   Donasi Sekarang
                 </span>
                 <span className="w-8 h-8 rounded-full flex items-center justify-center relative z-10">
-                  <ArrowRight
+                  <IconArrowRight
                     className={`w-4 h-4 group-hover:opacity-0 absolute transition-opacity duration-300 ${
                       isScrolled ? "text-black" : "text-foreground"
                     }`}
                   />
-                  <ArrowUpRight
+                  <IconArrowUpRight
                     className={`w-4 h-4 opacity-0 group-hover:opacity-100 transition-all duration-300 ${
                       isScrolled ? "text-black group-hover:text-white" : "text-foreground group-hover:text-background"
                     }`}
@@ -487,3 +533,5 @@ export function Header() {
     </motion.header>
   )
 }
+
+

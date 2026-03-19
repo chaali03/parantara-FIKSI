@@ -1,51 +1,177 @@
 "use client"
 
 import { usePathname } from "next/navigation"
-import { useEffect, useState } from "react"
-import Lottie from "lottie-react"
-import animationData from "@/public/lotie-loading.json"
+import { useEffect, useLayoutEffect, useState, useRef, Suspense } from "react"
 
-export function PageLoadingTransition() {
+declare global {
+  interface Window {
+    __pageLoadingPending?: boolean
+    __pageLoadingShow?: () => void
+    __pageLoadingHide?: () => void
+  }
+}
+
+let _Lottie: any = null
+let _animData: any = null
+let _preloadPromise: Promise<void> | null = null
+
+function preload() {
+  if (_Lottie && _animData) return Promise.resolve()
+  if (_preloadPromise) return _preloadPromise
+  _preloadPromise = Promise.all([
+    import("lottie-react"),
+    fetch("/lotie-loading.json").then((r) => r.json()),
+  ])
+    .then(([mod, data]) => {
+      _Lottie = mod.default
+      _animData = data
+    })
+    .catch(() => {})
+  return _preloadPromise
+}
+
+// PathWatcher: only this tiny component needs Suspense (uses usePathname)
+function PathWatcher() {
   const pathname = usePathname()
-  const [isTransitioning, setIsTransitioning] = useState(false)
+  const prevRef = useRef(pathname)
 
   useEffect(() => {
-    // Trigger transition on route change
-    setIsTransitioning(true)
-    
-    const timer = setTimeout(() => {
-      setIsTransitioning(false)
-    }, 800)
-
-    return () => clearTimeout(timer)
+    if (prevRef.current !== pathname) {
+      prevRef.current = pathname
+      if (typeof window.__pageLoadingHide === "function") {
+        window.__pageLoadingHide()
+      }
+    }
   }, [pathname])
+
+  return null
+}
+
+function Inner() {
+  const [visible, setVisible] = useState(false)
+  const [lottieReady, setLottieReady] = useState(false)
+  const safetyRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const hideRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const showTimeRef = useRef<number>(0)
+  const isShowingRef = useRef(false)
+
+  const showOverlay = () => {
+    if (hideRef.current) clearTimeout(hideRef.current)
+    if (safetyRef.current) clearTimeout(safetyRef.current)
+    isShowingRef.current = true
+    showTimeRef.current = Date.now()
+    setVisible(true)
+    if (!(_Lottie && _animData)) {
+      preload().then(() => setLottieReady(true))
+    }
+    safetyRef.current = setTimeout(() => {
+      isShowingRef.current = false
+      window.__pageLoadingPending = false
+      setVisible(false)
+    }, 8000)
+  }
+
+  const hideOverlay = () => {
+    if (!isShowingRef.current) return
+    if (safetyRef.current) clearTimeout(safetyRef.current)
+    window.__pageLoadingPending = false
+    const elapsed = Date.now() - showTimeRef.current
+    const delay = Math.max(0, 600 - elapsed)
+    hideRef.current = setTimeout(() => {
+      isShowingRef.current = false
+      setVisible(false)
+    }, delay)
+  }
+
+  // Register globals — useLayoutEffect runs synchronously after DOM paint
+  // Inner is NOT inside Suspense so it never gets suspended/remounted during navigation
+  useLayoutEffect(() => {
+    window.__pageLoadingShow = showOverlay
+    window.__pageLoadingHide = hideOverlay
+    return () => {
+      window.__pageLoadingShow = undefined
+      window.__pageLoadingHide = undefined
+    }
+  })
+
+  // Mount: preload lottie + check pending flag
+  useEffect(() => {
+    // Client-only preload
+    preload().then(() => setLottieReady(true))
+    if (window.__pageLoadingPending) {
+      showOverlay()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Fallback event listener
+  useEffect(() => {
+    const onNavigate = () => showOverlay()
+    window.addEventListener("page-navigate", onNavigate)
+    return () => window.removeEventListener("page-navigate", onNavigate)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  // Intercept plain <a> clicks
+  useEffect(() => {
+    const onClick = (e: MouseEvent) => {
+      const a = (e.target as HTMLElement).closest("a")
+      if (!a) return
+      const href = a.getAttribute("href")
+      if (!href || !href.startsWith("/") || href.startsWith("/#") || href.startsWith("/api")) return
+      if (href === window.location.pathname) return
+      showOverlay()
+    }
+    document.addEventListener("click", onClick, true)
+    return () => document.removeEventListener("click", onClick, true)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
+  useEffect(
+    () => () => {
+      if (safetyRef.current) clearTimeout(safetyRef.current)
+      if (hideRef.current) clearTimeout(hideRef.current)
+    },
+    []
+  )
 
   return (
     <>
-      {isTransitioning && (
-        <>
-          <div className="fixed inset-0 z-[9998] bg-gray-500/50 backdrop-blur-sm transition-opacity duration-200" />
+      {/* PathWatcher wrapped in Suspense — only this part suspends, Inner stays mounted */}
+      <Suspense fallback={null}>
+        <PathWatcher />
+      </Suspense>
 
-          <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none transition-all duration-300">
-            <div className="flex flex-col items-center gap-6">
-              <div className="w-[200px] h-[200px] md:w-[300px] md:h-[300px]">
-                <Lottie
-                  animationData={animationData}
-                  loop={true}
-                  rendererSettings={{
-                    preserveAspectRatio: "xMidYMid slice",
-                    progressiveLoad: true,
-                  }}
-                />
+      {visible && (
+        <>
+          <div className="fixed inset-0 z-[9998] bg-black/50 backdrop-blur-sm" />
+          <div className="fixed inset-0 z-[9999] flex items-center justify-center pointer-events-none">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-[200px] h-[200px] md:w-[280px] md:h-[280px]">
+                {lottieReady && _Lottie && _animData ? (
+                  <_Lottie
+                    animationData={_animData}
+                    loop
+                    autoplay
+                    rendererSettings={{ preserveAspectRatio: "xMidYMid slice" }}
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center">
+                    <div className="w-16 h-16 border-4 border-yellow-400 border-t-transparent rounded-full animate-spin" />
+                  </div>
+                )}
               </div>
-              <div className="text-gray-600 text-center">
-                <div className="text-xl font-semibold">Loading...</div>
-                <div className="text-base mt-2">Memuat halaman...</div>
-              </div>
+              <p className="text-white text-lg font-semibold drop-shadow-lg">Memuat halaman...</p>
             </div>
           </div>
         </>
       )}
     </>
   )
+}
+
+// Inner is NOT wrapped in Suspense — stays mounted throughout navigation
+// Only PathWatcher (inside Inner) uses Suspense
+export function PageLoadingTransition() {
+  return <Inner />
 }

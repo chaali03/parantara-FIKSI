@@ -1,13 +1,13 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { doc, getDoc, setDoc } from 'firebase/firestore'
 import { db } from '@/lib/firebase'
 import { motion } from 'framer-motion'
 import { CheckCircle2, XCircle, Loader2 } from 'lucide-react'
 
-export default function VerifyDevicePage() {
+function VerifyDeviceContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const token = searchParams.get('token')
@@ -136,5 +136,27 @@ export default function VerifyDevicePage() {
         </div>
       </motion.div>
     </div>
+  )
+}
+
+export default function VerifyDevicePage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-cyan-50 p-4">
+        <div className="max-w-md w-full bg-white rounded-2xl shadow-xl p-8">
+          <div className="text-center">
+            <Loader2 className="w-16 h-16 mx-auto text-blue-600 animate-spin mb-4" />
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">
+              Memverifikasi Perangkat
+            </h1>
+            <p className="text-gray-600">
+              Mohon tunggu sebentar...
+            </p>
+          </div>
+        </div>
+      </div>
+    }>
+      <VerifyDeviceContent />
+    </Suspense>
   )
 }

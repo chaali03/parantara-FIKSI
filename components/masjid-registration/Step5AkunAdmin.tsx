@@ -1,10 +1,12 @@
 // @ts-nocheck
 "use client"
 
-import { useState, useEffect } from "react"
-import { motion, AnimatePresence } from "framer-motion"
-import { UserCircle, Shield, Mail, Smartphone, Key, Check, AlertCircle } from "lucide-react"
-import { Label } from "@/components/ui/label"
+import { useState, useEffect, useRef } from "react"
+import { motion } from "framer-motion"
+import {
+  UserCircle, Shield, Mail, KeyRound, Check, AlertCircle,
+  Fingerprint, RefreshCw, Copy, Eye, EyeOff, Building2
+} from "lucide-react"
 import { Switch } from "@/components/ui/switch"
 
 interface Step5Props {
@@ -14,28 +16,225 @@ interface Step5Props {
   setShowPassword: (show: boolean) => void
 }
 
-export default function Step5AkunAdmin({ formData, setFormData, showPassword, setShowPassword }: Step5Props) {
+async function generatePassphrase(): Promise<string[]> {
+  const { generateMnemonic } = await import("@scure/bip39")
+  const { wordlist } = await import("@scure/bip39/wordlists/english.js")
+  const mnemonic = generateMnemonic(wordlist, 128) // 12 kata
+  return mnemonic.split(" ")
+}
+
+export default function Step5AkunAdmin({ formData, setFormData }: Step5Props) {
   const [userEmail, setUserEmail] = useState("")
+  const [enable2FA, setEnable2FA] = useState(false)
+  const [methods2FA, setMethods2FA] = useState<Set<string>>(new Set())
+  const [appSetupStep, setAppSetupStep] = useState<"idle" | "setup" | "done">("idle")
+
+  const [pin, setPin] = useState(["", "", "", "", "", ""])
+  const [pinConfirm, setPinConfirm] = useState(["", "", "", "", "", ""])
+  const [pinError, setPinError] = useState("")
+  const [showPin, setShowPin] = useState(false)
+  const pinRefs = useRef<(HTMLInputElement | null)[]>([])
+  const pinConfirmRefs = useRef<(HTMLInputElement | null)[]>([])
+
+  const [passphrase, setPassphrase] = useState<string[]>([])
+  const [passphraseCopied, setPassphraseCopied] = useState(false)
+  const [passphraseRevealed, setPassphraseRevealed] = useState(false)
+
+  const [totpSecret, setTotpSecret] = useState("")
+  const [totpQR, setTotpQR] = useState("")
+  const [totpVerifyCode, setTotpVerifyCode] = useState("")
+  const [totpVerified, setTotpVerified] = useState(false)
+  const [totpError, setTotpError] = useState("")
+
+  const [biometricSupported, setBiometricSupported] = useState(false)
+  const [biometricEnabled, setBiometricEnabled] = useState(false)
+  const [biometricStatus, setBiometricStatus] = useState("")
 
   useEffect(() => {
-    // Get logged in user email from localStorage
-    const email = localStorage.getItem('userEmail') || ""
+    const email = localStorage.getItem("userEmail") || ""
     setUserEmail(email)
-    setFormData({...formData, adminEmail: email})
+    generatePassphrase().then(words => setPassphrase(words))
+    if (window.PublicKeyCredential) {
+      window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable()
+        .then((ok) => setBiometricSupported(ok)).catch(() => {})
+    }
   }, [])
-  const [enable2FA, setEnable2FA] = useState(false)
-  const [method2FA, setMethod2FA] = useState<"email" | "sms" | "app">("email")
-  const [phoneNumber, setPhoneNumber] = useState("")
-  const [backupCodes, setBackupCodes] = useState<string[]>([])
-  const [showBackupCodes, setShowBackupCodes] = useState(false)
 
-  const generateBackupCodes = () => {
-    const codes = Array.from({ length: 8 }, () => 
-      Math.random().toString(36).substring(2, 10).toUpperCase()
-    )
-    setBackupCodes(codes)
-    setShowBackupCodes(true)
+  useEffect(() => {
+    if (userEmail || passphrase.length) {
+      setFormData({ ...formData, adminEmail: userEmail, recoveryPassphrase: passphrase.join(" ") })
+    }
+  }, [userEmail, passphrase])
+
+  useEffect(() => {
+    if (enable2FA && methods2FA.has("app") && appSetupStep === "idle") {
+      setAppSetupStep("setup")
+      generateTOTP()
+    }
+    if (!methods2FA.has("app")) setAppSetupStep("idle")
+  }, [enable2FA, methods2FA])
+
+  const generateTOTP = async () => {
+    try {
+      const { TOTP, Secret } = await import("otpauth")
+      const secret = new Secret({ size: 20 })
+      const totp = new TOTP({ issuer: "DanaMasjid", label: userEmail || "admin@danamasjid.id", algorithm: "SHA1", digits: 6, period: 30, secret })
+      const b32 = secret.base32
+      setTotpSecret(b32)
+      setFormData({ ...formData, totpSecret: b32 })
+      const QRCode = (await import("qrcode")).default
+      const qr = await QRCode.toDataURL(totp.toString(), { width: 180, margin: 1 })
+      setTotpQR(qr)
+    } catch (e) { console.error(e) }
   }
+
+  const verifyTOTP = async () => {
+    if (!totpSecret || totpVerifyCode.length !== 6) return
+    try {
+      const { TOTP, Secret } = await import("otpauth")
+      const totp = new TOTP({ issuer: "DanaMasjid", label: userEmail, algorithm: "SHA1", digits: 6, period: 30, secret: Secret.fromBase32(totpSecret) })
+      const delta = totp.validate({ token: totpVerifyCode, window: 1 })
+      if (delta !== null) { setTotpVerified(true); setTotpError(""); setAppSetupStep("done"); setFormData({ ...formData, totpVerified: true }) }
+      else setTotpError("Kode salah, coba lagi")
+    } catch { setTotpError("Verifikasi gagal") }
+  }
+
+  const handlePinInput = (index: number, value: string, isConfirm = false) => {
+    const val = value.replace(/\D/g, "").slice(-1)
+    if (isConfirm) {
+      const next = [...pinConfirm]; next[index] = val; setPinConfirm(next)
+      if (val && index < 5) pinConfirmRefs.current[index + 1]?.focus()
+      const fullPin = pin.join(""), fullConfirm = next.join("")
+      if (fullConfirm.length === 6) {
+        setPinError(fullPin !== fullConfirm ? "PIN tidak cocok" : "")
+        if (fullPin === fullConfirm) setFormData({ ...formData, adminPin: fullPin })
+      }
+    } else {
+      const next = [...pin]; next[index] = val; setPin(next)
+      if (val && index < 5) pinRefs.current[index + 1]?.focus()
+    }
+  }
+
+  const handlePinKeyDown = (index: number, e: React.KeyboardEvent, isConfirm = false) => {
+    if (e.key === "Backspace") {
+      const refs = isConfirm ? pinConfirmRefs : pinRefs
+      const arr = isConfirm ? [...pinConfirm] : [...pin]
+      if (!arr[index] && index > 0) refs.current[index - 1]?.focus()
+      else { arr[index] = ""; isConfirm ? setPinConfirm(arr) : setPin(arr) }
+    }
+  }
+
+  const enableBiometric = async () => {
+    try {
+      setBiometricStatus("Meminta izin biometrik...")
+      const cred = await navigator.credentials.create({
+        publicKey: {
+          challenge: crypto.getRandomValues(new Uint8Array(32)),
+          rp: { name: "DanaMasjid", id: window.location.hostname },
+          user: { id: new TextEncoder().encode(userEmail || "admin"), name: userEmail || "admin@danamasjid.id", displayName: formData.mosqueName || "Admin Masjid" },
+          pubKeyCredParams: [{ alg: -7, type: "public-key" }],
+          authenticatorSelection: { authenticatorAttachment: "platform", userVerification: "required" },
+          timeout: 60000,
+        },
+      })
+      if (cred) { setBiometricEnabled(true); setBiometricStatus("Berhasil didaftarkan"); setFormData({ ...formData, biometricEnabled: true }) }
+    } catch (e: any) {
+      setBiometricStatus(e.name === "NotAllowedError" ? "Izin ditolak" : "Gagal mendaftarkan")
+    }
+  }
+
+  const toggleMethod = (id: string) => {
+    setMethods2FA(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) {
+        next.delete(id)
+        if (id === "app") { setAppSetupStep("idle"); setTotpSecret(""); setTotpQR(""); setTotpVerified(false); setTotpVerifyCode("") }
+      } else {
+        next.add(id)
+      }
+      setFormData({ ...formData, methods2FA: Array.from(next) })
+      return next
+    })
+  }
+
+  const copyPassphrase = () => {
+    navigator.clipboard.writeText(passphrase.join(" "))
+    setPassphraseCopied(true)
+    setTimeout(() => setPassphraseCopied(false), 2000)
+  }
+
+  const regeneratePassphrase = async () => {
+    const words = await generatePassphrase()
+    setPassphrase(words)
+    setPassphraseRevealed(false)
+    setPassphraseCopied(false)
+    setFormData({ ...formData, recoveryPassphrase: words.join(" ") })
+  }
+
+  const downloadPDF = () => {
+    const words = passphrase
+    const html = `<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<title>Recovery Key - DanaMasjid</title>
+<style>
+  body { font-family: Arial, sans-serif; padding: 40px; color: #111; }
+  .header { text-align: center; margin-bottom: 32px; }
+  .header h1 { font-size: 24px; color: #1e3a8a; margin: 0 0 4px; }
+  .header p { font-size: 13px; color: #6b7280; margin: 0; }
+  .warning { background: #fef3c7; border: 2px solid #f59e0b; border-radius: 8px; padding: 12px 16px; margin-bottom: 24px; font-size: 12px; color: #92400e; }
+  .info { margin-bottom: 24px; font-size: 13px; }
+  .info span { font-weight: bold; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+  th { background: #1e3a8a; color: white; padding: 10px 14px; text-align: left; font-size: 13px; }
+  td { padding: 10px 14px; border-bottom: 1px solid #e5e7eb; font-size: 13px; }
+  tr:nth-child(even) td { background: #f9fafb; }
+  .word { font-family: monospace; font-weight: bold; font-size: 14px; }
+  .footer { text-align: center; font-size: 11px; color: #9ca3af; margin-top: 32px; border-top: 1px solid #e5e7eb; padding-top: 16px; }
+</style>
+</head>
+<body>
+<div class="header">
+  <h1>🔐 Recovery Key - DanaMasjid</h1>
+  <p>Dokumen ini bersifat rahasia. Simpan di tempat yang aman.</p>
+</div>
+<div class="warning">
+  ⚠️ <strong>PENTING:</strong> Jangan bagikan recovery key ini kepada siapapun. Gunakan hanya untuk pemulihan akun darurat.
+</div>
+<div class="info">
+  <p>Email Admin: <span>${userEmail || '-'}</span></p>
+  <p>Nama Masjid: <span>${formData.mosqueName || '-'}</span></p>
+  <p>Tanggal Dibuat: <span>${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</span></p>
+</div>
+<table>
+  <thead><tr><th>#</th><th>Kata</th><th>#</th><th>Kata</th><th>#</th><th>Kata</th></tr></thead>
+  <tbody>
+    ${[0,1,2,3].map(row => `
+    <tr>
+      <td>${row*3+1}</td><td class="word">${words[row*3] || ''}</td>
+      <td>${row*3+2}</td><td class="word">${words[row*3+1] || ''}</td>
+      <td>${row*3+3}</td><td class="word">${words[row*3+2] || ''}</td>
+    </tr>`).join('')}
+  </tbody>
+</table>
+<div class="footer">
+  DanaMasjid © ${new Date().getFullYear()} · Platform Donasi Masjid Transparan
+</div>
+</body>
+</html>`
+
+    const blob = new Blob([html], { type: 'text/html' })
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `recovery-key-danamasjid-${Date.now()}.html`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+
+  const inputCls = "w-full px-3 sm:px-4 py-2.5 sm:py-3 text-sm sm:text-base bg-white border-2 border-gray-900 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all"
+
   return (
     <div className="space-y-6 md:space-y-8">
       <div>
@@ -43,216 +242,281 @@ export default function Step5AkunAdmin({ formData, setFormData, showPassword, se
           <UserCircle className="w-6 h-6 sm:w-7 sm:h-7 text-blue-600 flex-shrink-0" />
           <span>Keamanan Akun Admin</span>
         </h2>
-        <p className="text-xs sm:text-sm text-gray-600">
-          Tingkatkan keamanan akun masjid Anda dengan Two-Factor Authentication
-        </p>
+        <p className="text-xs sm:text-sm text-gray-600">Atur keamanan akun untuk mengelola masjid Anda</p>
       </div>
 
-      {/* Current Account Info */}
+      {/* Akun Info */}
       <div className="bg-gradient-to-br from-indigo-50 to-blue-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-indigo-100">
         <h3 className="text-sm sm:text-base font-semibold text-gray-900 flex items-center gap-2 mb-3 sm:mb-4">
           <Mail className="w-4 h-4 sm:w-5 sm:h-5 text-indigo-600 flex-shrink-0" />
           <span>Akun Admin Terdaftar</span>
         </h3>
-        <div className="bg-white rounded-lg p-3 sm:p-4 border-2 border-indigo-200">
-          <p className="text-xs sm:text-sm text-gray-600 mb-1">Email Admin:</p>
-          <p className="text-sm sm:text-base font-semibold text-gray-900">{userEmail || "Loading..."}</p>
-          <p className="text-[10px] sm:text-xs text-gray-500 mt-2">
-            Akun ini akan digunakan untuk mengelola masjid di platform DanaMasjid
-          </p>
+        <div className="space-y-3">
+          {formData.mosqueName && (
+            <div>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">Nama Masjid</label>
+              <div className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-white border-2 border-gray-200 rounded-lg sm:rounded-xl">
+                <Building2 className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+                <span className="text-sm sm:text-base font-semibold text-gray-900">{formData.mosqueName}</span>
+              </div>
+            </div>
+          )}
+          <div>
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">Email Admin</label>
+            <div className="flex items-center gap-2 px-3 sm:px-4 py-2.5 sm:py-3 bg-white border-2 border-gray-200 rounded-lg sm:rounded-xl">
+              <Mail className="w-4 h-4 text-indigo-500 flex-shrink-0" />
+              <span className="text-sm sm:text-base font-semibold text-gray-900">{userEmail || "Memuat..."}</span>
+            </div>
+          </div>
+          <p className="text-[10px] sm:text-xs text-gray-500">Akun ini akan digunakan untuk mengelola masjid di platform DanaMasjid</p>
+          {formData.mosqueImage && (
+            <div>
+              <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-1.5">Foto Masjid</label>
+              <img
+                src={URL.createObjectURL(formData.mosqueImage)}
+                alt="Foto Masjid"
+                className="w-full h-56 sm:h-72 object-cover rounded-lg sm:rounded-xl border-2 border-indigo-200"
+              />
+            </div>
+          )}
         </div>
       </div>
 
-      {/* 2FA Security Section */}
-      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-blue-200">
-        <div className="flex items-start justify-between mb-4">
-          <div className="flex-1">
-            <div className="flex items-center gap-2 mb-2">
-              <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
-              <h3 className="text-sm sm:text-base font-semibold">Two-Factor Authentication (2FA)</h3>
+      {/* PIN */}
+      <div className="bg-gradient-to-br from-purple-50 to-pink-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-purple-100">
+        <h3 className="text-sm sm:text-base font-semibold text-gray-900 flex items-center gap-2 mb-1 sm:mb-2">
+          <KeyRound className="w-4 h-4 sm:w-5 sm:h-5 text-purple-600 flex-shrink-0" />
+          <span>PIN Keamanan (6 Digit)</span>
+        </h3>
+        <p className="text-xs text-gray-500 mb-4 sm:mb-5">Digunakan untuk konfirmasi transaksi dan aksi penting</p>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">Buat PIN</label>
+            <div className="flex gap-2 sm:gap-3">
+              {pin.map((v, i) => (
+                <input key={i} ref={(el) => (pinRefs.current[i] = el)}
+                  type={showPin ? "text" : "password"} inputMode="numeric" maxLength={1} value={v}
+                  onChange={(e) => handlePinInput(i, e.target.value, false)}
+                  onKeyDown={(e) => handlePinKeyDown(i, e, false)}
+                  className="w-10 h-12 sm:w-12 sm:h-14 text-center text-lg font-bold bg-white border-2 border-gray-900 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
+                />
+              ))}
             </div>
-            <p className="text-xs sm:text-sm text-slate-600">
-              Tambahkan lapisan keamanan ekstra untuk melindungi akun masjid Anda
-            </p>
           </div>
-          <Switch
-            checked={enable2FA}
-            onCheckedChange={setEnable2FA}
-            className="ml-4 flex-shrink-0"
-          />
+          <div>
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700 mb-2 sm:mb-3">Konfirmasi PIN</label>
+            <div className="flex gap-2 sm:gap-3">
+              {pinConfirm.map((v, i) => (
+                <input key={i} ref={(el) => (pinConfirmRefs.current[i] = el)}
+                  type={showPin ? "text" : "password"} inputMode="numeric" maxLength={1} value={v}
+                  onChange={(e) => handlePinInput(i, e.target.value, true)}
+                  onKeyDown={(e) => handlePinKeyDown(i, e, true)}
+                  className="w-10 h-12 sm:w-12 sm:h-14 text-center text-lg font-bold bg-white border-2 border-gray-900 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition-all"
+                />
+              ))}
+            </div>
+          </div>
+          {pinError && <p className="text-xs text-red-500">{pinError}</p>}
+          {!pinError && pin.join("").length === 6 && pinConfirm.join("") === pin.join("") && (
+            <p className="text-xs text-green-600 flex items-center gap-1"><Check className="w-3 h-3" /> PIN cocok</p>
+          )}
+          <button type="button" onClick={() => setShowPin(!showPin)}
+            className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700">
+            {showPin ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+            {showPin ? "Sembunyikan PIN" : "Tampilkan PIN"}
+          </button>
+        </div>
+      </div>
+
+      {/* Biometric */}
+      {biometricSupported && (
+        <div className="bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-green-100">
+          <div className="flex items-start justify-between gap-4">
+            <div className="flex-1">
+              <h3 className="text-sm sm:text-base font-semibold text-gray-900 flex items-center gap-2 mb-1">
+                <Fingerprint className="w-4 h-4 sm:w-5 sm:h-5 text-green-600 flex-shrink-0" />
+                <span>Biometrik / Fingerprint</span>
+              </h3>
+              <p className="text-xs text-gray-500">Login lebih cepat dengan sidik jari atau Face ID</p>
+              {biometricStatus && (
+                <p className={`text-xs mt-2 font-medium ${biometricEnabled ? "text-green-600" : "text-gray-500"}`}>{biometricStatus}</p>
+              )}
+            </div>
+            {!biometricEnabled ? (
+              <button type="button" onClick={enableBiometric}
+                className="px-3 sm:px-4 py-2 sm:py-2.5 text-xs sm:text-sm font-semibold bg-white border-2 border-green-600 text-green-700 rounded-lg sm:rounded-xl hover:bg-green-50 transition-all flex-shrink-0">
+                Aktifkan
+              </button>
+            ) : (
+              <div className="flex items-center gap-1.5 text-green-600 text-xs font-semibold flex-shrink-0">
+                <Check className="w-4 h-4" /> Aktif
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Recovery Passphrase (BIP39) */}
+      <div className="bg-gradient-to-br from-yellow-50 to-orange-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-yellow-200">
+        <h3 className="text-sm sm:text-base font-semibold text-gray-900 flex items-center gap-2 mb-1 sm:mb-2">
+          <KeyRound className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 flex-shrink-0" />
+          <span>Recovery Passphrase</span>
+          <span className="text-[10px] bg-yellow-200 text-yellow-800 px-2 py-0.5 rounded-full font-semibold ml-auto">BIP39 · 12 Kata</span>
+        </h3>
+        <p className="text-xs text-gray-500 mb-3 sm:mb-4">12 kata acak standar BIP39 untuk pemulihan akun darurat. Simpan di tempat yang aman.</p>
+
+        {/* Grid 12 kata */}
+        <div className="relative">
+          <div className={`grid grid-cols-3 gap-1.5 sm:gap-2 ${!passphraseRevealed ? "blur-sm select-none pointer-events-none" : ""}`}>
+            {passphrase.map((word, i) => (
+              <div key={i} className="flex items-center gap-1.5 bg-white border-2 border-yellow-200 rounded-lg px-2 py-1.5">
+                <span className="text-[10px] text-yellow-600 font-bold w-4 flex-shrink-0">{i + 1}.</span>
+                <span className="text-xs sm:text-sm font-mono font-semibold text-gray-900">{word}</span>
+              </div>
+            ))}
+          </div>
+          {!passphraseRevealed && (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <button type="button" onClick={() => setPassphraseRevealed(true)}
+                className="flex items-center gap-2 px-4 py-2 bg-yellow-600 text-white text-xs font-semibold rounded-xl hover:bg-yellow-700 transition-colors shadow-lg">
+                <Eye className="w-3.5 h-3.5" /> Tampilkan Passphrase
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="flex items-center gap-2 mt-3">
+          {passphraseRevealed && (
+            <button type="button" onClick={() => setPassphraseRevealed(false)}
+              className="flex items-center gap-1.5 text-xs text-gray-500 hover:text-gray-700 transition-colors">
+              <EyeOff className="w-3.5 h-3.5" /> Sembunyikan
+            </button>
+          )}
+          <button type="button" onClick={copyPassphrase}
+            className="flex items-center gap-1.5 text-xs text-yellow-700 hover:text-yellow-900 font-semibold transition-colors ml-auto">
+            {passphraseCopied ? <><Check className="w-3.5 h-3.5 text-green-600" /> Tersalin</> : <><Copy className="w-3.5 h-3.5" /> Salin</>}
+          </button>
+          <button type="button" onClick={downloadPDF}
+            className="flex items-center gap-1.5 text-xs text-yellow-700 hover:text-yellow-900 font-semibold transition-colors">
+            <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" /></svg>
+            Download
+          </button>
+          <button type="button" onClick={regeneratePassphrase}
+            className="flex items-center gap-1.5 text-xs text-yellow-700 hover:text-yellow-900 font-semibold transition-colors">
+            <RefreshCw className="w-3.5 h-3.5" /> Generate Ulang
+          </button>
+        </div>
+
+        <p className="text-[10px] sm:text-xs text-yellow-700 mt-3 flex items-center gap-1">
+          <AlertCircle className="w-3 h-3 flex-shrink-0" />
+          Passphrase ini hanya ditampilkan sekali. Pastikan sudah disimpan sebelum melanjutkan.
+        </p>
+      </div>
+
+      {/* 2FA */}
+      <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl sm:rounded-2xl p-4 sm:p-6 border-2 border-blue-100">
+        <div className="flex items-start justify-between gap-4 mb-1">
+          <div className="flex-1">
+            <h3 className="text-sm sm:text-base font-semibold text-gray-900 flex items-center gap-2">
+              <Shield className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0" />
+              <span>Two-Factor Authentication (2FA)</span>
+            </h3>
+            <p className="text-xs text-gray-500 mt-1">Lapisan keamanan ekstra untuk akun masjid Anda</p>
+          </div>
+          <Switch checked={enable2FA} onCheckedChange={setEnable2FA} className="flex-shrink-0" />
         </div>
 
         {enable2FA && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: "auto" }}
-            transition={{ duration: 0.3 }}
-            className="space-y-4 mt-4 pt-4 border-t border-blue-200"
-          >
-            {/* 2FA Method Selection */}
-            <div>
-              <Label className="text-xs sm:text-sm font-semibold mb-3 block">
-                Pilih Metode Verifikasi
-              </Label>
-              <div className="grid gap-3">
-                {/* Email Method */}
-                <button
-                  type="button"
-                  onClick={() => setMethod2FA("email")}
-                  className={`flex items-start gap-3 p-3 sm:p-4 rounded-lg border-2 transition-all ${
-                    method2FA === "email"
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-slate-200 hover:border-blue-300"
-                  }`}
-                >
-                  <Mail className={`w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0 ${method2FA === "email" ? "text-blue-600" : "text-slate-400"}`} />
-                  <div className="flex-1 text-left">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs sm:text-sm font-semibold">Email OTP</span>
-                      {method2FA === "email" && <Check className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />}
-                    </div>
-                    <p className="text-[10px] sm:text-xs text-slate-600 mt-1">
-                      Kode verifikasi akan dikirim ke email terdaftar
-                    </p>
-                  </div>
-                </button>
+          <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} transition={{ duration: 0.3 }}
+            className="space-y-3 mt-4 pt-4 border-t border-blue-200">
+            <label className="block text-xs sm:text-sm font-semibold text-gray-700">Pilih Metode Verifikasi <span className="text-gray-400 font-normal">(boleh lebih dari 1)</span></label>
+            <div className="space-y-2">
+              {[
+                { id: "app", icon: KeyRound, label: "Authenticator App", desc: "Google / Microsoft Authenticator", badge: "Recommended" },
+                { id: "email", icon: Mail, label: "Email OTP", desc: "Kode dikirim ke email terdaftar" },
+              ].map(({ id, icon: Icon, label, desc, badge }) => {
+                const selected = methods2FA.has(id)
+                return (
+                  <div key={id}>
+                    <button type="button" onClick={() => toggleMethod(id)}
+                      className={`w-full flex items-center gap-3 px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg sm:rounded-xl border-2 transition-all text-left ${
+                        selected ? "border-blue-500 bg-white" : "border-gray-200 bg-white hover:border-blue-300"
+                      }`}>
+                      {/* Checkbox */}
+                      <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 transition-all ${
+                        selected ? "bg-blue-600 border-blue-600" : "border-gray-400"
+                      }`}>
+                        {selected && <Check className="w-2.5 h-2.5 text-white" />}
+                      </div>
+                      <Icon className={`w-4 h-4 flex-shrink-0 ${selected ? "text-blue-600" : "text-gray-400"}`} />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className="text-xs sm:text-sm font-semibold text-gray-900">{label}</span>
+                          {badge && <span className="text-[10px] bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">{badge}</span>}
+                          {id === "app" && appSetupStep === "done" && (
+                            <span className="text-[10px] bg-blue-100 text-blue-700 px-2 py-0.5 rounded-full font-semibold flex items-center gap-1">
+                              <Check className="w-2.5 h-2.5" /> Terverifikasi
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-[10px] sm:text-xs text-gray-500">{desc}</p>
+                      </div>
+                    </button>
 
-                {/* SMS Method */}
-                <button
-                  type="button"
-                  onClick={() => setMethod2FA("sms")}
-                  className={`flex items-start gap-3 p-3 sm:p-4 rounded-lg border-2 transition-all ${
-                    method2FA === "sms"
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-slate-200 hover:border-blue-300"
-                  }`}
-                >
-                  <Smartphone className={`w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0 ${method2FA === "sms" ? "text-blue-600" : "text-slate-400"}`} />
-                  <div className="flex-1 text-left">
-                    <div className="flex items-center gap-2">
-                      <span className="text-xs sm:text-sm font-semibold">SMS OTP</span>
-                      {method2FA === "sms" && <Check className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />}
-                    </div>
-                    <p className="text-[10px] sm:text-xs text-slate-600 mt-1">
-                      Kode verifikasi akan dikirim via SMS
-                    </p>
-                  </div>
-                </button>
+                    {/* Authenticator App Setup — hanya muncul kalau dipilih */}
+                    {id === "app" && selected && appSetupStep !== "idle" && (
+                      <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: "auto" }} transition={{ duration: 0.25 }}
+                        className="mt-2 ml-0 p-3 sm:p-4 bg-white border-2 border-blue-200 rounded-lg sm:rounded-xl space-y-3">
+                        {appSetupStep === "setup" && (
+                          <>
+                            <p className="text-xs text-gray-600 font-medium">1. Scan QR code dengan Google / Microsoft Authenticator</p>
+                            <div className="flex justify-center">
+                              {totpQR
+                                ? <img src={totpQR} alt="TOTP QR" className="w-36 h-36 sm:w-40 sm:h-40 rounded-xl border-2 border-gray-200" />
+                                : <div className="w-36 h-36 bg-gray-100 rounded-xl animate-pulse" />
+                              }
+                            </div>
+                            <div>
+                              <p className="text-[10px] text-gray-500 mb-1 text-center">Atau masukkan secret key manual:</p>
+                              <div className="px-3 py-2 bg-gray-50 border-2 border-gray-200 rounded-lg">
+                                <code className="text-xs font-mono text-gray-900 break-all">{totpSecret}</code>
+                              </div>
+                            </div>
+                            <div className="space-y-2">
+                              <p className="text-xs text-gray-600 font-medium">2. Masukkan kode 6 digit dari app untuk verifikasi</p>
+                              <div className="flex gap-2">
+                                <input type="text" inputMode="numeric" maxLength={6} value={totpVerifyCode}
+                                  onChange={(e) => setTotpVerifyCode(e.target.value.replace(/\D/g, ""))}
+                                  placeholder="000000"
+                                  className="flex-1 px-3 sm:px-4 py-2.5 text-sm font-mono bg-white border-2 border-gray-900 rounded-lg sm:rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-500/20 focus:border-blue-500 transition-all text-center tracking-widest" />
+                                <button type="button" onClick={verifyTOTP}
+                                  className="px-4 py-2.5 bg-blue-600 text-white text-sm font-semibold rounded-lg sm:rounded-xl hover:bg-blue-700 transition-colors">
+                                  Verifikasi
+                                </button>
+                              </div>
+                              {totpError && <p className="text-xs text-red-500">{totpError}</p>}
+                            </div>
+                          </>
+                        )}
+                        {appSetupStep === "done" && (
+                          <div className="flex items-center gap-2 text-green-600 text-sm font-semibold">
+                            <Check className="w-4 h-4" /> Authenticator App berhasil diverifikasi
+                          </div>
+                        )}
+                      </motion.div>
+                    )}
 
-                {/* Authenticator App Method */}
-                <button
-                  type="button"
-                  onClick={() => setMethod2FA("app")}
-                  className={`flex items-start gap-3 p-3 sm:p-4 rounded-lg border-2 transition-all ${
-                    method2FA === "app"
-                      ? "border-blue-500 bg-blue-50"
-                      : "border-slate-200 hover:border-blue-300"
-                  }`}
-                >
-                  <Key className={`w-4 h-4 sm:w-5 sm:h-5 mt-0.5 flex-shrink-0 ${method2FA === "app" ? "text-blue-600" : "text-slate-400"}`} />
-                  <div className="flex-1 text-left">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <span className="text-xs sm:text-sm font-semibold">Authenticator App</span>
-                      {method2FA === "app" && <Check className="w-3 h-3 sm:w-4 sm:h-4 text-blue-600" />}
-                      <span className="text-[10px] sm:text-xs bg-green-100 text-green-700 px-2 py-0.5 rounded-full font-semibold">
-                        Recommended
-                      </span>
-                    </div>
-                    <p className="text-[10px] sm:text-xs text-slate-600 mt-1">
-                      Gunakan Google Authenticator atau Microsoft Authenticator
-                    </p>
+
                   </div>
-                </button>
-              </div>
+                )
+              })}
             </div>
-
-            {/* Phone Number Input for SMS */}
-            {method2FA === "sms" && (
-              <motion.div
-                initial={{ opacity: 0, y: -10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="space-y-2"
-              >
-                <Label htmlFor="phone2fa" className="text-xs sm:text-sm">Nomor Telepon</Label>
-                <input
-                  id="phone2fa"
-                  type="tel"
-                  value={phoneNumber}
-                  onChange={(e) => setPhoneNumber(e.target.value)}
-                  placeholder="08123456789"
-                  className="w-full px-3 sm:px-4 py-2 sm:py-2.5 text-sm sm:text-base border-2 border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                />
-              </motion.div>
-            )}
-
-            {/* Generate Backup Codes Button */}
-            {!showBackupCodes && (
-              <button
-                type="button"
-                onClick={generateBackupCodes}
-                className="w-full px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-semibold hover:bg-blue-700 transition-colors"
-              >
-                Generate Backup Codes
-              </button>
-            )}
-
-            {/* Backup Codes Display */}
-            {showBackupCodes && (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="bg-yellow-50 border-2 border-yellow-300 rounded-lg p-3 sm:p-4"
-              >
-                <div className="flex items-start gap-2 mb-3">
-                  <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-yellow-600 mt-0.5 flex-shrink-0" />
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-semibold text-yellow-900">Backup Codes</h4>
-                    <p className="text-[10px] sm:text-xs text-yellow-700 mt-1">
-                      Simpan kode-kode ini di tempat aman. Gunakan jika Anda kehilangan akses ke metode 2FA.
-                    </p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-2 mt-3">
-                  {backupCodes.map((code, index) => (
-                    <div
-                      key={index}
-                      className="bg-white px-2 sm:px-3 py-1.5 sm:py-2 rounded border border-yellow-200 font-mono text-[10px] sm:text-xs text-center"
-                    >
-                      {code}
-                    </div>
-                  ))}
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    const text = backupCodes.join("\n")
-                    navigator.clipboard.writeText(text)
-                  }}
-                  className="mt-3 text-xs sm:text-sm text-blue-600 hover:text-blue-700 font-semibold"
-                >
-                  Copy All Codes
-                </button>
-              </motion.div>
-            )}
           </motion.div>
         )}
       </div>
 
-      {/* Info Box */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 sm:p-4">
-        <div className="flex gap-2 sm:gap-3">
-          <AlertCircle className="w-4 h-4 sm:w-5 sm:h-5 text-blue-600 flex-shrink-0 mt-0.5" />
-          <div className="text-xs sm:text-sm text-blue-900">
-            <p className="font-semibold mb-1">Mengapa 2FA Penting?</p>
-            <ul className="space-y-0.5 sm:space-y-1 text-blue-800">
-              <li>• Melindungi akun dari akses tidak sah</li>
-              <li>• Mencegah pencurian data donasi</li>
-              <li>• Meningkatkan kepercayaan donatur</li>
-              <li>• Dapat dinonaktifkan kapan saja dari dashboard</li>
-            </ul>
-          </div>
-        </div>
-      </div>
+
     </div>
   )
 }
