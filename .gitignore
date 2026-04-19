@@ -41,3 +41,7 @@ next-env.d.ts
 
 # SuperAdmin (separate git repo)
 SuperAdmin-danamasjid/
+
+# Large video files (too big for GitHub)
+public/tb-profile.mp4
+public/tb-profile-optimized.mp4
