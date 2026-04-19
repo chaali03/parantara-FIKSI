@@ -4,6 +4,7 @@
 [build]
   command = "npm run build:netlify"
   publish = ".next"
+  edge_functions = ".netlify/edge-functions"
 
 [build.environment]
   NODE_VERSION = "20"
@@ -11,6 +12,9 @@
   NODE_ENV = "production"
   NPM_FLAGS = "--legacy-peer-deps"
   NEXT_TELEMETRY_DISABLED = "1"
+  # Use standard Netlify build settings to avoid blob upload errors
+  NETLIFY_USE_V3_CACHE = "true"
+  NETLIFY_SKIP_WASM_REWRITING = "true"
 
 # Enable Netlify Edge for faster global delivery
 [[plugins]]

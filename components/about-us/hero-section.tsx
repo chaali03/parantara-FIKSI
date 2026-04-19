@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useRef, memo } from "react";
 import dynamic from "next/dynamic";
+import { OptimizedVideo } from "@/components/ui/optimized-video";
 
 const LottieReact = dynamic(() => import("lottie-react"), { ssr: false });
 
@@ -141,20 +142,21 @@ export function HeroSection() {
     <>
       {/* Video Section - original, tanpa overlay putih/hitam */}
       <section className="relative min-h-[50vh] md:min-h-[60vh] lg:min-h-[100vh] flex flex-col justify-center items-start overflow-hidden bg-white">
-        {/* Background Video - tanpa modifikasi warna */}
-        <div className="absolute inset-0 z-0 flex items-center justify-center">
-          <video
+        {/* Background Video - menggunakan OptimizedVideo dengan bit-rate lebih rendah dan resolusi adaptif */}
+        <div className="absolute inset-0 z-0">
+          <OptimizedVideo
+            src="/tb-profile-optimized.mp4"
+            poster="/images/hero-poster.webp"
             autoPlay
             loop
             muted
             playsInline
-            className="w-full h-full object-cover"
-            style={{ objectPosition: 'center' }}
-          >
-            <source src="/tb-profile-optimized.mp4" type="video/mp4" />
-          </video>
-          {/* OVERLAY GRADIENT PUTIH DIHAPUS - video tampil original */}
-          {/* GRID LINES DIHAPUS - tidak ada warna hitam/putih tambahan */}
+            preload="auto"
+            loading="eager"
+            className="w-full h-full"
+            width={1280}
+            height={720}
+          />
         </div>
       </section>
 

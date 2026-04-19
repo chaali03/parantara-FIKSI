@@ -75,6 +75,15 @@ const nextConfig = {
     parallelServerBuildTraces: false,
     optimizeCss: true,
     gzipSize: true,
+    // Add memory limits for Turbopack if applicable
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js',
+        },
+      },
+    },
   },
   
   // Move serverComponentsExternalPackages to root level
